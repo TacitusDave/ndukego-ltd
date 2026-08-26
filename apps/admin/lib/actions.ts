@@ -226,6 +226,8 @@ export async function updateEstateDetails(id: string, fields: {
 export async function updateEstateBuildingTypes(id: string, buildingTypes: unknown[]) {
   const { error } = await authPatch(`/estates/${id}/building-types`, { buildingTypes });
   if (error) return { error };
+  revalidatePath(`/estates/${id}`);
+  revalidatePath("/estates");
   return { error: null };
 }
 

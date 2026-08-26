@@ -4,100 +4,17 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { X, ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 import { API_IMAGE_BASE } from "@/lib/api";
 
-// ─── Prototype definitions ─────────────────────────────────────────────────
-const PROTOTYPES = [
-  {
-    id: "fully-detached",
-    name: "Fully Detached Duplex",
-    swatch: "#7B6FD4",
-    rgb: [123, 111, 212] as [number, number, number],
-    images: [
-      "/prototype/Fully-Detached-Duplex-Prototype.png",
-      "/prototype/Fully-Detached-Duplex-Prototype2.png",
-    ],
-    desc: "A private, standalone two-storey home on its own dedicated plot with no shared walls. Comes with a private driveway, generous compound space, and full perimeter fencing — the most exclusive category in the estate.",
-    specs: ["2 Floors", "Private compound", "Private driveway", "No shared walls", "Perimeter fencing"],
-  },
-  {
-    id: "terrace",
-    name: "Terrace Duplex",
-    swatch: "#C05050",
-    rgb: [192, 80, 80] as [number, number, number],
-    images: [
-      "/prototype/Terrace-Duplex-Prototype.png",
-      "/prototype/Terrace-Duplex-Prototype2.png",
-    ],
-    desc: "Modern two-storey terrace homes built in organized rows, sharing side walls with neighboring units. A structured community feel with excellent value — ideal for young families.",
-    specs: ["2 Floors", "Row layout", "Front garden space", "Shared side walls", "Private entrance"],
-  },
-  {
-    id: "semi-detached",
-    name: "Semi-Detached Duplex",
-    swatch: "#D080C0",
-    rgb: [208, 128, 192] as [number, number, number],
-    images: [
-      "/prototype/Semi-Detached-Duplex-Prototype.png",
-      "/prototype/Semi-Detached-Duplex-Prototype2.png",
-    ],
-    desc: "A two-storey home sharing one wall with a single neighboring unit. Strikes the ideal balance between the privacy of a fully detached home and the affordability of a terrace.",
-    specs: ["2 Floors", "One shared wall", "Side garden", "Private driveway", "Compound space"],
-  },
-  {
-    id: "block-of-flats",
-    name: "Block of Flats",
-    swatch: "#00C8DC",
-    rgb: [0, 200, 220] as [number, number, number],
-    images: [
-      "/prototype/Block-of-Flat-Prototype.png",
-      "/prototype/Block-of-Flat-Prototype2.png",
-    ],
-    desc: "A multi-storey residential building containing multiple self-contained apartments. Each flat is independently accessed and fully fitted. Excellent for investment buyers seeking rental income.",
-    specs: ["Multiple floors", "Self-contained units", "Shared lobby", "Car park", "Investment-grade"],
-  },
-  {
-    id: "bungalow",
-    name: "Bungalow",
-    swatch: "#D4C820",
-    rgb: [212, 200, 32] as [number, number, number],
-    images: [
-      "/prototype/Bungalow-Prototype.png",
-      "/prototype/Bungalow-Prototype2.png",
-    ],
-    desc: "A beautifully designed single-storey home with an expansive floor plan and large surrounding compound. Ideal for families who prefer step-free living and generous outdoor space.",
-    specs: ["Single floor", "Large compound", "Open plan living", "Wide frontage", "Easy accessibility"],
-  },
-  {
-    id: "shopping",
-    name: "Shopping Complex",
-    swatch: "#D48820",
-    rgb: [212, 136, 32] as [number, number, number],
-    images: ["/prototype/Shopping-Complex-Prototype.png"],
-    desc: "A commercial retail complex at the heart of the estate, designed to serve residents and the surrounding community with retail shops, service outlets, and commercial offices.",
-    specs: ["Ground + upper floor", "Retail units", "Commercial offices", "Parking area", "24/7 access"],
-  },
-  {
-    id: "school",
-    name: "School",
-    swatch: "#60B060",
-    rgb: [96, 176, 96] as [number, number, number],
-    images: [],
-    desc: "An educational facility planned for the estate community. Full details and concept designs will be available soon.",
-    specs: ["Coming soon"],
-    comingSoon: true,
-  },
-  {
-    id: "gatehouse",
-    name: "Gatehouse / Powerhouse",
-    swatch: "#906040",
-    rgb: [144, 96, 64] as [number, number, number],
-    images: ["/prototype/Gate-House-Prototype.png"],
-    desc: "The estate's main security and power management facility at the entrance gate. Houses security personnel, visitor management systems, and the estate's backup power infrastructure.",
-    specs: ["24/7 manned security", "Visitor registration", "CCTV monitoring", "Backup power systems", "Estate gate control"],
-  },
-] as const;
-
-type PrototypeId = typeof PROTOTYPES[number]["id"];
-type Prototype = typeof PROTOTYPES[number];
+// ─── Prototype type ────────────────────────────────────────────────────────
+interface Prototype {
+  id: string;
+  name: string;
+  swatch: string;
+  rgb: [number, number, number];
+  images: readonly string[];
+  desc: string;
+  specs: readonly string[];
+  comingSoon?: boolean;
+}
 
 // ─── Dynamic prototype format (from admin) ─────────────────────────────────
 export interface DynamicBuildingType {
@@ -120,15 +37,15 @@ function hexToRgb(hex: string): [number, number, number] {
 
 function toInternalPrototype(bt: DynamicBuildingType): Prototype {
   return {
-    id: bt.id as PrototypeId,
+    id: bt.id,
     name: bt.name,
     swatch: bt.colorHex,
     rgb: hexToRgb(bt.colorHex),
-    images: (bt.images ?? []) as unknown as readonly string[],
+    images: bt.images ?? [],
     desc: bt.description ?? "",
-    specs: [] as unknown as readonly string[],
+    specs: [],
     comingSoon: bt.comingSoon,
-  } as unknown as Prototype;
+  };
 }
 
 function resolveImageUrl(url: string): string {
@@ -140,7 +57,7 @@ function colorDist(r1: number, g1: number, b1: number, r2: number, g2: number, b
   return Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2);
 }
 
-function findPrototypeFrom(r: number, g: number, b: number, prototypes: readonly Prototype[]): Prototype | null {
+function findPrototypeFrom(r: number, g: number, b: number, prototypes: Prototype[]): Prototype | null {
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
   if (max - min < 45) return null; // too gray
@@ -155,7 +72,7 @@ function findPrototypeFrom(r: number, g: number, b: number, prototypes: readonly
     const d = colorDist(r, g, b, pr, pg, pb);
     if (d < minDist) {
       minDist = d;
-      closest = proto as unknown as Prototype;
+      closest = proto;
     }
   }
 
@@ -169,10 +86,10 @@ interface EstateSitePlanProps {
 }
 
 export function EstateSitePlan({ sitePlanUrl, buildingTypes }: EstateSitePlanProps = {}) {
-  const activePrototypes: readonly Prototype[] =
+  const activePrototypes: Prototype[] =
     buildingTypes && buildingTypes.length > 0
       ? buildingTypes.map(toInternalPrototype)
-      : (PROTOTYPES as unknown as readonly Prototype[]);
+      : [];
 
   const planImageSrc = sitePlanUrl
     ? resolveImageUrl(sitePlanUrl)
@@ -233,7 +150,7 @@ export function EstateSitePlan({ sitePlanUrl, buildingTypes }: EstateSitePlanPro
 
     const proto = findPrototypeFrom(r, g, b, activePrototypes);
     if (proto) {
-      setSelected(proto as Prototype);
+      setSelected(proto);
       setImgIdx(0);
     }
   }
@@ -341,27 +258,29 @@ export function EstateSitePlan({ sitePlanUrl, buildingTypes }: EstateSitePlanPro
       <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
 
       {/* ── Colour legend ──────────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-gray-100 bg-white/80 p-5">
-        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Plot Type Legend</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {activePrototypes.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => { setSelected(p as Prototype); setImgIdx(0); }}
-              className="flex items-center gap-2.5 rounded-xl border border-gray-100 bg-white px-3 py-2.5 hover:border-gray-300 hover:shadow-sm transition-all text-left"
-            >
-              <span
-                className="h-4 w-4 shrink-0 rounded-sm"
-                style={{ backgroundColor: p.swatch }}
-              />
-              <span className="text-xs font-medium text-gray-700 leading-tight">{p.name}</span>
-            </button>
-          ))}
+      {activePrototypes.length > 0 && (
+        <div className="rounded-2xl border border-gray-100 bg-white/80 p-5">
+          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Plot Type Legend</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {activePrototypes.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => { setSelected(p); setImgIdx(0); }}
+                className="flex items-center gap-2.5 rounded-xl border border-gray-100 bg-white px-3 py-2.5 hover:border-gray-300 hover:shadow-sm transition-all text-left"
+              >
+                <span
+                  className="h-4 w-4 shrink-0 rounded-sm"
+                  style={{ backgroundColor: p.swatch }}
+                />
+                <span className="text-xs font-medium text-gray-700 leading-tight">{p.name}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Prototype modal ─────────────────────────────────────────────── */}
-      {selected && (
+      {selected !== null && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
           onClick={(e) => { if (e.target === e.currentTarget) setSelected(null); }}
