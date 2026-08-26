@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { usePermissions } from "@/components/layout/permissions-context";
+import { isSuperAdminOrExecutive } from "@/lib/permissions";
 import Link from "next/link";
 import {
   ChevronLeft, Mail, Phone, MapPin, User, CalendarCheck,
@@ -108,9 +110,13 @@ function displayName(c: Customer) {
   return c.companyName ?? c.email;
 }
 
+const NO_PERMISSION_MSG = "This action is not under your permission list";
+
 export default function CustomerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const permissions = usePermissions();
+  const canManage = isSuperAdminOrExecutive(permissions);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -282,7 +288,13 @@ export default function CustomerDetailPage() {
         </Button>
         {!editing ? (
           <>
-            <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setEditing(true)}
+              disabled={!canManage}
+              title={!canManage ? NO_PERMISSION_MSG : undefined}
+            >
               <Edit2 className="mr-1.5 h-3.5 w-3.5" />
               Edit
             </Button>
@@ -290,11 +302,12 @@ export default function CustomerDetailPage() {
               size="sm"
               variant="outline"
               onClick={handleToggleStatus}
-              disabled={toggling}
+              disabled={toggling || !canManage}
+              title={!canManage ? NO_PERMISSION_MSG : undefined}
               className={
                 customer.status === "INACTIVE"
-                  ? "border-green-600/30 text-green-600 hover:bg-green-600 hover:text-white"
-                  : "border-amber-500/30 text-amber-600 hover:bg-amber-500 hover:text-white"
+                  ? "border-green-600/30 text-green-600 hover:bg-green-600 hover:text-white disabled:opacity-50 disabled:pointer-events-none"
+                  : "border-amber-500/30 text-amber-600 hover:bg-amber-500 hover:text-white disabled:opacity-50 disabled:pointer-events-none"
               }
             >
               {toggling ? (
@@ -310,7 +323,9 @@ export default function CustomerDetailPage() {
               size="sm"
               variant="outline"
               onClick={() => setConfirmDelete(true)}
-              className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              disabled={!canManage}
+              title={!canManage ? NO_PERMISSION_MSG : undefined}
+              className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground disabled:opacity-50 disabled:pointer-events-none"
             >
               <Trash2 className="mr-1.5 h-3.5 w-3.5" />
               Delete

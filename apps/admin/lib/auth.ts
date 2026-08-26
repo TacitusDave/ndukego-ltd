@@ -42,7 +42,7 @@ export async function login(email: string, password: string) {
   });
   cookieStore.set(
     "user_info",
-    JSON.stringify({ id: user.id, email: user.email, type: user.type }),
+    JSON.stringify({ id: user.id, email: user.email, type: user.type, permissions: user.permissions ?? [] }),
     {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
@@ -77,7 +77,7 @@ export async function superLogin(email: string, code: string) {
   const cookieStore = await cookies();
   cookieStore.set("access_token", accessToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 15 * 60, path: "/" });
   cookieStore.set("refresh_token", refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 7 * 24 * 60 * 60, path: "/" });
-  cookieStore.set("user_info", JSON.stringify({ id: user.id, email: user.email, type: user.type }), { httpOnly: false, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 7 * 24 * 60 * 60, path: "/" });
+  cookieStore.set("user_info", JSON.stringify({ id: user.id, email: user.email, type: user.type, permissions: user.permissions ?? [] }), { httpOnly: false, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 7 * 24 * 60 * 60, path: "/" });
   return { error: null };
 }
 
@@ -102,7 +102,7 @@ export async function getSession() {
   const userInfoStr = cookieStore.get("user_info")?.value;
   if (!token || !userInfoStr) return null;
   try {
-    return { token, user: JSON.parse(userInfoStr) as { id: string; email: string; type: string } };
+    return { token, user: JSON.parse(userInfoStr) as { id: string; email: string; type: string; permissions?: string[] } };
   } catch {
     return null;
   }

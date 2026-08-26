@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { Shell } from "@/components/layout/shell";
+import { PermissionsProvider } from "@/components/layout/permissions-context";
 import { getSession } from "@/lib/auth";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -8,5 +9,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/login");
   }
 
-  return <Shell>{children}</Shell>;
+  const permissions = session.user.permissions ?? [];
+
+  return (
+    <PermissionsProvider permissions={permissions}>
+      <Shell>{children}</Shell>
+    </PermissionsProvider>
+  );
 }

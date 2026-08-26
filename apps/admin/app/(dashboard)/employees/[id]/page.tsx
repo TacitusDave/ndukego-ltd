@@ -3,6 +3,8 @@
 import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { usePermissions } from "@/components/layout/permissions-context";
+import { isSuperAdminOrExecutive } from "@/lib/permissions";
 import {
   ChevronLeft, Loader2, CheckCircle, AlertCircle, XCircle,
   Mail, Phone, Calendar, Edit2, X, Save, Trash2,
@@ -45,8 +47,12 @@ const STATUS_ACTIVE_BTN: Record<string, string> = {
   TERMINATED: "bg-red-600 text-white border-red-600",
 };
 
+const NO_PERMISSION_MSG = "This action is not under your permission list";
+
 export default function EmployeeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const permissions = usePermissions();
+  const canManage = isSuperAdminOrExecutive(permissions);
   const [id, setId] = useState("");
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [allRoles, setAllRoles] = useState<Role[]>([]);
@@ -236,7 +242,13 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
         </Button>
         {!editing ? (
           <>
-            <Button size="sm" variant="outline" onClick={() => { setEditing(true); setFeedback(null); }}>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { setEditing(true); setFeedback(null); }}
+              disabled={!canManage}
+              title={!canManage ? NO_PERMISSION_MSG : undefined}
+            >
               <Edit2 className="mr-1.5 h-3.5 w-3.5" />
               Edit
             </Button>
@@ -244,7 +256,9 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
               size="sm"
               variant="outline"
               onClick={() => setConfirmDelete(true)}
-              className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              disabled={!canManage}
+              title={!canManage ? NO_PERMISSION_MSG : undefined}
+              className="border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground disabled:opacity-50 disabled:pointer-events-none"
             >
               <Trash2 className="mr-1.5 h-3.5 w-3.5" />
               Delete
@@ -417,9 +431,10 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
                 <button
                   key={s}
                   onClick={() => updateStatus(s)}
-                  disabled={employee.status === s}
+                  disabled={employee.status === s || !canManage}
+                  title={!canManage ? NO_PERMISSION_MSG : undefined}
                   className={cn(
-                    "rounded-lg px-3 py-1.5 text-xs font-semibold border transition-colors",
+                    "rounded-lg px-3 py-1.5 text-xs font-semibold border transition-colors disabled:opacity-50 disabled:pointer-events-none",
                     employee.status === s
                       ? (STATUS_ACTIVE_BTN[s] ?? "bg-secondary text-secondary-foreground border-secondary cursor-default")
                       : "bg-background border-input hover:bg-muted text-foreground",
@@ -444,20 +459,22 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
               {employee.roles.map(({ role }) => (
                 <div key={role.id} className="flex items-center gap-1.5 rounded-full bg-secondary/10 border border-secondary/20 pl-3 pr-1.5 py-1">
                   <span className="text-xs font-medium text-secondary">{role.name}</span>
-                  <button
-                    onClick={() => removeRole(role.id)}
-                    disabled={isPending}
-                    className="rounded-full text-secondary/50 hover:text-destructive transition-colors"
-                    title="Remove role"
-                  >
-                    <XCircle className="h-3.5 w-3.5" />
-                  </button>
+                  {canManage && (
+                    <button
+                      onClick={() => removeRole(role.id)}
+                      disabled={isPending}
+                      className="rounded-full text-secondary/50 hover:text-destructive transition-colors"
+                      title="Remove role"
+                    >
+                      <XCircle className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
           )}
 
-          {availableRoles.length > 0 && (
+          {availableRoles.length > 0 && canManage && (
             <div className="flex gap-2 pt-2 border-t border-border">
               <select
                 value={selectedRoleId}
