@@ -9,6 +9,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatDateTime } from "@/lib/utils";
+import { usePermissions } from "@/components/layout/permissions-context";
+import { can } from "@/lib/permissions";
+
+const NO_PERMISSION_MSG = "This action is not under your permission list";
 
 interface Inspector { id: string; firstName: string; lastName: string; jobTitle: string | null; email: string }
 interface Property  { id: string; title: string; state: string; city: string | null; category: string }
@@ -64,6 +68,8 @@ const selectCls =
 export default function InspectionDetailPage() {
   const { id }   = useParams<{ id: string }>();
   const router   = useRouter();
+  const permissions = usePermissions();
+  const canManageInspection = can(permissions, "inspection.update");
   const [insp,   setInsp]   = useState<Inspection | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
@@ -314,28 +320,49 @@ export default function InspectionDetailPage() {
               )}
 
               {canStart && (
-                <Button className="w-full" onClick={handleStart} disabled={actionLoading}>
+                <Button
+                  className="w-full"
+                  onClick={handleStart}
+                  disabled={actionLoading || !canManageInspection}
+                  title={!canManageInspection ? NO_PERMISSION_MSG : undefined}
+                >
                   Start inspection
                 </Button>
               )}
 
               {canComplete && !showComplete && (
-                <Button className="w-full" onClick={() => setShowComplete(true)} disabled={actionLoading}>
+                <Button
+                  className="w-full"
+                  onClick={() => canManageInspection && setShowComplete(true)}
+                  disabled={actionLoading || !canManageInspection}
+                  title={!canManageInspection ? NO_PERMISSION_MSG : undefined}
+                >
                   <ShieldCheck className="mr-2 h-4 w-4" />
                   Complete
                 </Button>
               )}
 
               {canFail && (
-                <Button variant="outline" className="w-full text-red-600 border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950"
-                  onClick={handleFail} disabled={actionLoading}>
+                <Button
+                  variant="outline"
+                  className="w-full text-red-600 border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950"
+                  onClick={handleFail}
+                  disabled={actionLoading || !canManageInspection}
+                  title={!canManageInspection ? NO_PERMISSION_MSG : undefined}
+                >
                   <XCircle className="mr-2 h-4 w-4" />
                   Mark as failed
                 </Button>
               )}
 
               {canCancel && (
-                <Button variant="outline" className="w-full" onClick={handleCancel} disabled={actionLoading}>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleCancel}
+                  disabled={actionLoading || !canManageInspection}
+                  title={!canManageInspection ? NO_PERMISSION_MSG : undefined}
+                >
                   <AlertCircle className="mr-2 h-4 w-4" />
                   Cancel
                 </Button>

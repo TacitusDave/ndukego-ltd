@@ -5,6 +5,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, CheckCircle, XCircle, Loader2, Receipt, Clock } from "lucide-react";
 import { formatDate, formatDateTime, formatCurrency } from "@/lib/utils";
+import { usePermissions } from "@/components/layout/permissions-context";
+import { can } from "@/lib/permissions";
+
+const NO_PERMISSION_MSG = "This action is not under your permission list";
 
 interface Reservation {
   id: string;
@@ -61,6 +65,10 @@ const TRANSITIONS: Record<string, { status: string; label: string; variant: "con
 
 export default function ReservationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const permissions = usePermissions();
+  const canUpdateReservation = can(permissions, "reservation.update");
+  const canCancelReservation = can(permissions, "reservation.cancel");
+  const canCreateSale = can(permissions, "sale.create");
   const [id, setId] = useState("");
   const [reservation, setReservation] = useState<Reservation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -308,7 +316,7 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
         </div>
       </div>
 
-      {/* Convert to Sale — only shown when CONFIRMED */}
+      {/* Convert to Sale — only shown when CONFIRMED and user has sale.create */}
       {reservation.status === "CONFIRMED" && (
         <div className="rounded-xl border border-primary/20 bg-card p-5 space-y-4">
           <div className="flex items-center justify-between">
@@ -316,12 +324,18 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
               <Receipt className="h-4 w-4 text-primary" />
               <h2 className="font-semibold">Convert to Sale</h2>
             </div>
-            <button
-              onClick={() => setShowSaleForm((v) => !v)}
-              className="text-xs text-primary hover:underline"
-            >
-              {showSaleForm ? "Hide" : "Create sale record →"}
-            </button>
+            {canCreateSale ? (
+              <button
+                onClick={() => setShowSaleForm((v) => !v)}
+                className="text-xs text-primary hover:underline"
+              >
+                {showSaleForm ? "Hide" : "Create sale record →"}
+              </button>
+            ) : (
+              <span className="text-xs text-muted-foreground cursor-not-allowed" title={NO_PERMISSION_MSG}>
+                Create sale record →
+              </span>
+            )}
           </div>
 
           {showSaleForm && (
@@ -462,16 +476,19 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
             />
           </div>
           <div className="flex flex-wrap gap-3">
-            {transitions.map((t) => (
+            {transitions.map((t) => {
+              const hasAccess = t.variant === "cancel" ? canCancelReservation : canUpdateReservation;
+              return (
               <button
                 key={t.status}
-                onClick={() => updateStatus(t.status)}
-                disabled={isPending}
-                className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-60 ${
+                onClick={() => hasAccess && updateStatus(t.status)}
+                disabled={isPending || !hasAccess}
+                title={!hasAccess ? NO_PERMISSION_MSG : undefined}
+                className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50 ${
                   t.variant === "confirm"
                     ? "bg-green-600 text-white hover:bg-green-700"
                     : "bg-red-600 text-white hover:bg-red-700"
-                }`}
+                } ${!hasAccess ? "cursor-not-allowed" : ""}`}
               >
                 {isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -482,7 +499,8 @@ export default function ReservationDetailPage({ params }: { params: Promise<{ id
                 )}
                 {t.label}
               </button>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

@@ -6,6 +6,25 @@ import { transitionPropertyStatus } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { usePermissions } from "@/components/layout/permissions-context";
+import { can } from "@/lib/permissions";
+
+const NO_PERMISSION_MSG = "This action is not under your permission list";
+
+// Maps each target status to the permission required to transition to it
+const STATUS_PERMISSION: Record<string, string> = {
+  PENDING_INSPECTION:   "property.update",
+  PENDING_VERIFICATION: "property.update",
+  APPROVED:             "property.approve",
+  PUBLISHED:            "property.publish",
+  RESERVED:             "property.update",
+  UNDER_NEGOTIATION:    "property.update",
+  UNDER_CONTRACT:       "property.update",
+  SOLD:                 "property.update",
+  ARCHIVED:             "property.archive",
+  REJECTED:             "property.update",
+  DRAFT:                "property.update",
+};
 
 const STATUS_TRANSITIONS: Record<string, string[]> = {
   DRAFT: ["PENDING_INSPECTION", "REJECTED"],
@@ -39,6 +58,7 @@ const DESTRUCTIVE = new Set(["REJECTED", "ARCHIVED"]);
 
 export function PropertyActions({ propertyId, currentStatus }: { propertyId: string; currentStatus: string }) {
   const router = useRouter();
+  const permissions = usePermissions();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [reason, setReason] = useState("");
@@ -106,17 +126,23 @@ export function PropertyActions({ propertyId, currentStatus }: { propertyId: str
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
-          {allowed.map((status) => (
-            <Button
-              key={status}
-              size="sm"
-              variant={DESTRUCTIVE.has(status) ? "destructive" : "outline"}
-              disabled={pending}
-              onClick={() => handleClick(status)}
-            >
-              {STATUS_LABELS[status]}
-            </Button>
-          ))}
+          {allowed.map((status) => {
+            const requiredPerm = STATUS_PERMISSION[status] ?? "property.update";
+            const hasAccess = can(permissions, requiredPerm);
+            return (
+              <Button
+                key={status}
+                size="sm"
+                variant={DESTRUCTIVE.has(status) ? "destructive" : "outline"}
+                disabled={pending || !hasAccess}
+                title={!hasAccess ? NO_PERMISSION_MSG : undefined}
+                className={!hasAccess ? "opacity-50 cursor-not-allowed" : ""}
+                onClick={() => hasAccess && handleClick(status)}
+              >
+                {STATUS_LABELS[status]}
+              </Button>
+            );
+          })}
         </div>
       )}
     </div>

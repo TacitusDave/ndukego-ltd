@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
@@ -14,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { PropertyStatusBadge } from "./property-status-badge";
 import { PropertyFilters } from "./property-filters";
+import { CreatePropertyButton } from "./create-property-button";
 
 interface Property {
   id: string;
@@ -59,12 +59,7 @@ export default async function PropertiesPage({ searchParams }: PageProps) {
   return (
     <div className="flex flex-col h-full">
       <Header title="Properties">
-        <Button asChild size="sm">
-          <Link href="/properties/new">
-            <Plus className="mr-1 h-4 w-4" />
-            Add property
-          </Link>
-        </Button>
+        <CreatePropertyButton />
       </Header>
 
       <div className="flex-1 p-6 space-y-4">

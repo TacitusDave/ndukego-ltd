@@ -27,6 +27,11 @@ export function canSeeSection(permissions: Permission[], section: string): boole
   return permissions.includes(required);
 }
 
+// ─── Generic action check ─────────────────────────────────────────────────────
+export function can(permissions: Permission[], code: string): boolean {
+  return permissions.includes(code);
+}
+
 // ─── Role-level checks ────────────────────────────────────────────────────────
 // property.delete is seeded only for SUPER_ADMIN and EXECUTIVE — reliable proxy
 export function isSuperAdminOrExecutive(permissions: Permission[]): boolean {

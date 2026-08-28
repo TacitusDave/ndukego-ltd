@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { hardDeleteProperty } from "@/lib/actions";
+import { usePermissions } from "@/components/layout/permissions-context";
+import { can } from "@/lib/permissions";
 
 interface Props {
   propertyId: string;
@@ -12,11 +14,14 @@ interface Props {
 }
 
 export function PropertyDeleteButton({ propertyId, propertyTitle }: Props) {
+  const permissions = usePermissions();
   const [open, setOpen] = useState(false);
   const [typed, setTyped] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+
+  if (!can(permissions, "property.delete")) return null;
 
   const confirmed = typed.trim() === propertyTitle.trim();
 

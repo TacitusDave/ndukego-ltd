@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
 import { Header } from "@/components/layout/header";
-import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
+import { ScheduleInspectionButton } from "./schedule-inspection-button";
 import { formatDate } from "@/lib/utils";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -72,12 +71,7 @@ export default async function InspectionsPage({ searchParams }: PageProps) {
   return (
     <div className="flex flex-col h-full">
       <Header title="Inspections">
-        <Button asChild size="sm">
-          <Link href="/inspections/new">
-            <Plus className="mr-1 h-4 w-4" />
-            Schedule inspection
-          </Link>
-        </Button>
+        <ScheduleInspectionButton />
       </Header>
 
       <div className="flex-1 p-6 space-y-4">

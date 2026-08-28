@@ -7,6 +7,10 @@ import {
   ShieldCheck, AlertCircle,
 } from "lucide-react";
 import { formatDate, formatCurrency } from "@/lib/utils";
+import { usePermissions } from "@/components/layout/permissions-context";
+import { can } from "@/lib/permissions";
+
+const NO_PERMISSION_MSG = "This action is not under your permission list";
 
 interface Payment {
   id: string;
@@ -99,6 +103,11 @@ function fmtLabel(s: string) {
 const SELECT_CLS = "w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring";
 
 export default function SaleDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const permissions = usePermissions();
+  const canUpdateSale = can(permissions, "sale.update");
+  const canApproveSale = can(permissions, "sale.approve");
+  const canRecordPayment = can(permissions, "payment.create");
+  const canVerifyPayment = can(permissions, "payment.verify");
   const [id, setId] = useState("");
   const [sale, setSale] = useState<Sale | null>(null);
   const [loading, setLoading] = useState(true);
@@ -381,8 +390,10 @@ export default function SaleDetailPage({ params }: { params: Promise<{ id: strin
           <h2 className="font-semibold text-sm">Payment History</h2>
           <span className="text-xs text-muted-foreground ml-1">{sale.payments.length} payment{sale.payments.length !== 1 ? "s" : ""}</span>
           <button
-            onClick={() => setShowPaymentForm((v) => !v)}
-            className="ml-auto flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
+            onClick={() => canRecordPayment && setShowPaymentForm((v) => !v)}
+            disabled={!canRecordPayment}
+            title={!canRecordPayment ? NO_PERMISSION_MSG : undefined}
+            className={`ml-auto flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {showPaymentForm ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
             {showPaymentForm ? "Cancel" : "Record payment"}
@@ -525,14 +536,18 @@ export default function SaleDetailPage({ params }: { params: Promise<{ id: strin
                   {p.status === "PENDING_VERIFICATION" && (
                     <div className="flex gap-1.5">
                       <button
-                        onClick={() => verifyPayment(p.id)}
-                        className="rounded bg-green-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-green-700 transition-colors"
+                        onClick={() => canVerifyPayment && verifyPayment(p.id)}
+                        disabled={!canVerifyPayment}
+                        title={!canVerifyPayment ? NO_PERMISSION_MSG : undefined}
+                        className="rounded bg-green-600 px-2 py-1 text-[11px] font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Verify
                       </button>
                       <button
-                        onClick={() => rejectPayment(p.id)}
-                        className="rounded border border-red-500/40 px-2 py-1 text-[11px] font-semibold text-red-500 hover:bg-red-500/10 transition-colors"
+                        onClick={() => canVerifyPayment && rejectPayment(p.id)}
+                        disabled={!canVerifyPayment}
+                        title={!canVerifyPayment ? NO_PERMISSION_MSG : undefined}
+                        className="rounded border border-red-500/40 px-2 py-1 text-[11px] font-semibold text-red-500 hover:bg-red-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Reject
                       </button>
@@ -560,21 +575,25 @@ export default function SaleDetailPage({ params }: { params: Promise<{ id: strin
             />
           </div>
           <div className="flex flex-wrap gap-3">
-            {transitions.map((t) => (
+            {transitions.map((t) => {
+              const hasAccess = t.status === "APPROVED" ? canApproveSale : canUpdateSale;
+              return (
               <button
                 key={t.status}
-                onClick={() => updateStatus(t.status)}
-                disabled={isPending}
-                className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-60 ${
+                onClick={() => hasAccess && updateStatus(t.status)}
+                disabled={isPending || !hasAccess}
+                title={!hasAccess ? NO_PERMISSION_MSG : undefined}
+                className={`flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50 ${
                   t.variant === "confirm" ? "bg-green-600 text-white hover:bg-green-700"
                   : t.variant === "warn" ? "bg-orange-500 text-white hover:bg-orange-600"
                   : "bg-red-600 text-white hover:bg-red-700"
-                }`}
+                } ${!hasAccess ? "cursor-not-allowed" : ""}`}
               >
                 {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : t.variant === "confirm" ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
                 {t.label}
               </button>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

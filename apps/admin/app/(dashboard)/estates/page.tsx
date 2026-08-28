@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
 import { Header } from "@/components/layout/header";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { apiFetch } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
+import { CreateEstateButton } from "./create-estate-button";
 import {
   Table,
   TableBody,
@@ -46,12 +45,7 @@ export default async function EstatesPage() {
   return (
     <div className="flex flex-col h-full">
       <Header title="Estates">
-        <Button asChild size="sm">
-          <Link href="/estates/new">
-            <Plus className="mr-1 h-4 w-4" />
-            Add estate
-          </Link>
-        </Button>
+        <CreateEstateButton />
       </Header>
 
       <div className="flex-1 p-6 space-y-4">
