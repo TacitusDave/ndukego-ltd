@@ -30,7 +30,7 @@ export async function login(email: string, password: string) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 15 * 60,
+    maxAge: 7 * 24 * 60 * 60,
     path: "/",
   });
   cookieStore.set("refresh_token", refreshToken, {
@@ -75,7 +75,7 @@ export async function superLogin(email: string, code: string) {
 
   const { accessToken, refreshToken, user } = await res.json();
   const cookieStore = await cookies();
-  cookieStore.set("access_token", accessToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 15 * 60, path: "/" });
+  cookieStore.set("access_token", accessToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 7 * 24 * 60 * 60, path: "/" });
   cookieStore.set("refresh_token", refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 7 * 24 * 60 * 60, path: "/" });
   cookieStore.set("user_info", JSON.stringify({ id: user.id, email: user.email, type: user.type, permissions: user.permissions ?? [] }), { httpOnly: false, secure: process.env.NODE_ENV === "production", sameSite: "lax", maxAge: 7 * 24 * 60 * 60, path: "/" });
   return { error: null };
@@ -131,7 +131,7 @@ export async function refreshSession() {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 15 * 60,
+    maxAge: 7 * 24 * 60 * 60,
     path: "/",
   });
   return true;

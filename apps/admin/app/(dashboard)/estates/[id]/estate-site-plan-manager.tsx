@@ -262,8 +262,11 @@ function BuildingTypeRow({
 
   async function handleImageUpload(file: File) {
     setUploading(true);
-    await onUploadImage(file);
-    setUploading(false);
+    try {
+      await onUploadImage(file);
+    } finally {
+      setUploading(false);
+    }
   }
 
   return (

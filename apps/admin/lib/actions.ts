@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { refreshSession } from "./auth";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
 
@@ -11,23 +12,39 @@ async function getAuthToken() {
   return cookieStore.get("access_token")?.value ?? null;
 }
 
-async function authPost(path: string, body: Record<string, unknown>) {
+async function getValidToken(): Promise<string | null> {
   const token = await getAuthToken();
+  if (token) return token;
+  const refreshed = await refreshSession();
+  if (!refreshed) return null;
+  return getAuthToken();
+}
+
+async function authPost(path: string, body: Record<string, unknown>) {
+  let token = await getValidToken();
   if (!token) return { error: "Not authenticated" };
 
-  let res: Response;
-  try {
-    res = await fetch(`${API_BASE}${path}`, {
+  const doFetch = (t: string) =>
+    fetch(`${API_BASE}${path}`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
       body: JSON.stringify(body),
       cache: "no-store",
     });
+
+  let res: Response;
+  try {
+    res = await doFetch(token);
   } catch {
     return { error: "Cannot reach API server. Is it running?" };
+  }
+
+  if (res.status === 401) {
+    const ok = await refreshSession();
+    if (ok) {
+      token = (await getAuthToken()) ?? token;
+      try { res = await doFetch(token); } catch { return { error: "Cannot reach API server. Is it running?" }; }
+    }
   }
 
   const json = await res.json().catch(() => ({}));
@@ -44,18 +61,29 @@ async function authPost(path: string, body: Record<string, unknown>) {
 }
 
 async function authDelete(path: string) {
-  const token = await getAuthToken();
+  let token = await getValidToken();
   if (!token) return { error: "Not authenticated" };
+
+  const doFetch = (t: string) =>
+    fetch(`${API_BASE}${path}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${t}` },
+      cache: "no-store",
+    });
 
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    });
+    res = await doFetch(token);
   } catch {
     return { error: "Cannot reach API server. Is it running?" };
+  }
+
+  if (res.status === 401) {
+    const ok = await refreshSession();
+    if (ok) {
+      token = (await getAuthToken()) ?? token;
+      try { res = await doFetch(token); } catch { return { error: "Cannot reach API server. Is it running?" }; }
+    }
   }
 
   const json = await res.json().catch(() => ({}));
@@ -69,22 +97,30 @@ async function authDelete(path: string) {
 }
 
 async function authPatch(path: string, body: Record<string, unknown>) {
-  const token = await getAuthToken();
+  let token = await getValidToken();
   if (!token) return { error: "Not authenticated" };
 
-  let res: Response;
-  try {
-    res = await fetch(`${API_BASE}${path}`, {
+  const doFetch = (t: string) =>
+    fetch(`${API_BASE}${path}`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${t}` },
       body: JSON.stringify(body),
       cache: "no-store",
     });
+
+  let res: Response;
+  try {
+    res = await doFetch(token);
   } catch {
     return { error: "Cannot reach API server. Is it running?" };
+  }
+
+  if (res.status === 401) {
+    const ok = await refreshSession();
+    if (ok) {
+      token = (await getAuthToken()) ?? token;
+      try { res = await doFetch(token); } catch { return { error: "Cannot reach API server. Is it running?" }; }
+    }
   }
 
   const json = await res.json().catch(() => ({}));
