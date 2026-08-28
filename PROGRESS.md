@@ -1,6 +1,6 @@
 # NHGP — Build Progress & Master Todo List
 
-_Updated: 2026-08-14 | Session 24_
+_Updated: 2026-08-28 | Session 25_
 
 > This file is the single source of truth for what's done, what's in progress, and what
 > remains until 100% production-ready. Read it at the start of every session.
@@ -19,7 +19,7 @@ Assistant, Mobile App.
 
 ---
 
-## PHASE 1 — Foundation (MVP) `⬛⬛⬛⬛⬛⬛⬛⬛⬛⬛ ~99% done`
+## PHASE 1 — Foundation (MVP) `⬛⬛⬛⬛⬛⬛⬛⬛⬛⬛ ~100% done`
 
 Target: Live and usable by company staff and customers.
 
@@ -114,7 +114,7 @@ Target: Live and usable by company staff and customers.
 
 ---
 
-## PHASE 2 — Business Operations `⬛⬛⬜⬜⬜⬜⬜⬜⬜⬜ ~25% done`
+## PHASE 2 — Business Operations `⬛⬛⬛⬜⬜⬜⬜⬜⬜⬜ ~35% done`
 
 > Note: Several Phase 2 items were built ahead of schedule during Phase 1 sessions.
 > The items below reflect what is genuinely still outstanding.
@@ -382,3 +382,4 @@ Build after Phase 3 demonstrates ROI.
 | 22 | 2026-08-14 | Inquiry → Reservation one-click pipeline — "Reserve" button on inquiry row, API converts inquiry to PENDING reservation (auto-creates customer if new), returns reservation number + link |
 | 23 | 2026-08-14 | Fix inquiry form 500 error — replaced raw SQL INSERT with prisma.inquiry.create() to fix column name mismatch for unmapped camelCase Prisma fields |
 | 24 | 2026-08-14 | Fix inspection routes 404 on Railway — Turbo cache was serving stale NestJS dist without inspection module despite code being correct; changed railway.toml buildCommand to bypass Turbo entirely (explicit per-package pnpm builds ensure fresh nest build every deploy) |
+| 25 | 2026-08-28 | Fix site plan manager image upload + save-then-logout bugs — root cause was 15min access_token cookie maxAge matching JWT expiry; extended cookie lifetime to 7 days, added 401-refresh-retry to all server actions (authPost/authPatch/authDelete) and the proxy route (including multipart/form-data retry); fixed handleImageUpload try/finally so button always re-enables; RBAC sidebar filtering + employee/customer page action guards built (permissions context, canSeeSection, isSuperAdminOrExecutive); Removed hardcoded PROTOTYPES from estate site plan; RBAC extended to all remaining admin pages: property create/status/delete, estate create, reservation confirm/cancel/convert-to-sale, inspection schedule/start/complete/fail/cancel, sale status/payment-record/payment-verify |
