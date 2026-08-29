@@ -36,6 +36,7 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+Github Push Command.md
 
 # Uploaded files (property images, documents)
 apps/api/storage/
