@@ -198,13 +198,14 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {EXECUTIVES.map((person, i) => (
               <div key={i} className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col shadow-sm">
-                <div className="relative aspect-[3.8/5] w-full overflow-hidden bg-muted">
+                <div className="relative aspect-[3.8/5] w-full overflow-hidden bg-[#f5f5f3]">
                   {person.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={person.photo}
                       alt={person.title}
-                      className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-[1.02]"
+                      className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02]"
+                      style={{ objectPosition: 'center 18%' }}
                     />
                   ) : (
                     <PhotoPlaceholder className="h-full w-full" />
