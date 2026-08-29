@@ -197,7 +197,7 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {EXECUTIVES.map((person, i) => (
-              <div key={i} className="border border-border bg-card overflow-hidden flex flex-col shadow-sm">
+              <div key={i} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col shadow-sm">
                 {/* Photo — fills card top */}
                 {person.photo ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -211,7 +211,7 @@ export default function AboutPage() {
                 )}
 
                 {/* Info — below photo, tight gap */}
-                <div className="px-4 pt-3 pb-4 flex flex-col flex-1">
+                <div className="rounded-full px-4 pt-3 pb-4 flex flex-col flex-1">
                   {/* Red title only — no duplicate black name */}
                   <p
                     className="text-[11px] font-bold uppercase tracking-[0.12em] text-secondary"
