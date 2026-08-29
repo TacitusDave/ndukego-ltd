@@ -99,7 +99,7 @@ export default function AboutPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
             <h1 className="text-4xl font-bold text-foreground mb-4 leading-tight">
-              About<br />&amp; Ndukego Investment Properties Limited
+              About Ndukego<br />&amp; Investment Properties Limited
             </h1>
             <p className="text-lg text-muted-foreground leading-relaxed">
               A professional real estate company connecting buyers, investors, and renters
