@@ -154,7 +154,7 @@ export function LoginContent() {
                   <p className="text-sm text-red-600">
                     Your account has been deactivated until further notice.{" "}
                     <a
-                      href="mailto:ndukegoinvest.propertiesltd@gmail.com"
+                      href="mailto:tacitusdave@gmail.com"
                       className="font-semibold underline hover:text-red-700"
                     >
                       Contact the Administrator
@@ -184,7 +184,7 @@ export function LoginContent() {
           <p className="mt-10 text-center text-xs text-gray-400">
             Need access?{" "}
             <a
-              href="mailto:ndukegoinvest.propertiesltd@gmail.com"
+              href="mailto:tacitusdave@gmail.com"
               className="text-[#C1121F] hover:text-[#D62839] font-medium transition-colors"
             >
               Contact your administrator

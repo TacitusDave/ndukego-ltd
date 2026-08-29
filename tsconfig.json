@@ -1,0 +1,16 @@
+{
+  "extends": "./packages/typescript-config/base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@ndukego/config": ["packages/config/src"],
+      "@ndukego/database": ["packages/database/src"],
+      "@ndukego/hooks": ["packages/hooks/src"],
+      "@ndukego/lib": ["packages/lib/src"],
+      "@ndukego/types": ["packages/types/src"],
+      "@ndukego/ui": ["packages/ui/src"],
+      "@ndukego/utils": ["packages/utils/src"],
+      "@ndukego/validation": ["packages/validation/src"]
+    }
+  }
+}

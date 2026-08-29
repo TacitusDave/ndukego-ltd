@@ -53,7 +53,7 @@ export default async function FavoritesPage() {
       </div>
 
       {favorites.length === 0 ? (
-        <div className="rounded-xl border bg-card p-12 text-center">
+        <div className="border bg-card p-12 text-center">
           <Heart className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
           <p className="font-medium text-foreground">No saved properties</p>
           <p className="text-sm text-muted-foreground mt-2 max-w-sm mx-auto">
@@ -71,7 +71,7 @@ export default async function FavoritesPage() {
           {favorites.map((fav) => {
             const cover = fav.property.media[0];
             return (
-              <div key={fav.id} className="rounded-xl border bg-card overflow-hidden hover:shadow-md transition-shadow">
+              <div key={fav.id} className="border bg-card overflow-hidden hover:shadow-md transition-shadow">
                 <div className="relative aspect-[16/9] bg-muted">
                   {cover ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -86,7 +86,7 @@ export default async function FavoritesPage() {
                     </div>
                   )}
                   <div className="absolute top-2 left-2">
-                    <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[10px] font-semibold text-white">
+                    <span className="bg-secondary px-2.5 py-0.5 text-[10px] font-semibold text-white">
                       {CATEGORY_LABEL[fav.property.category] ?? fav.property.category}
                     </span>
                   </div>

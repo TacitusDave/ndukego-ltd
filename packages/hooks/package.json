@@ -1,12 +1,13 @@
 {
-  "name": "hooks",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "name": "@ndukego/hooks",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "types": "./src/index.ts",
+  "files": [
+    "src"
+  ]
 }
