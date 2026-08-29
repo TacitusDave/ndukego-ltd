@@ -56,7 +56,7 @@ const EXECUTIVES = [
   {
     title: "Executive Director & Head of Digital Operations",
     bio: "Overseeing daily operations and the company's digital presence, ensuring every client receives the highest standard of professional service.",
-    photo: "/Profile-Picture.jpg",
+    photo: "/Profile-Picture.png",
     instagram: null as string | null,
     tiktok: null as string | null,
     youtube: null as string | null,
@@ -198,7 +198,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {EXECUTIVES.map((person, i) => (
               <div key={i} className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col shadow-sm">
-                <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted">
+                <div className="relative aspect-[3.8/5] w-full overflow-hidden bg-muted">
                   {person.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -286,7 +286,7 @@ export default function AboutPage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {TEAM.map((person, i) => (
               <div key={i} className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col shadow-sm">
-                <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted">
+                <div className="relative aspect-[3.8/5] w-full overflow-hidden bg-muted">
                   {person.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
