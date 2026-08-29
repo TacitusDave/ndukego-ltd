@@ -197,24 +197,24 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {EXECUTIVES.map((person, i) => (
-              <div key={i} className="relative overflow-visible flex flex-col shadow-sm">
-                <div className="relative z-10 -mt-3 mx-2 sm:mx-3">
-                  <div className="relative aspect-[3.8/5] overflow-hidden rounded-[1.4rem] border border-border bg-[#f5f5f3] shadow-md">
-                    {person.photo ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={person.photo}
-                        alt={person.title}
-                        className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02]"
-                        style={{ objectPosition: 'center 18%' }}
-                      />
-                    ) : (
+              <div key={i} className="relative flex flex-col">
+                <div className="relative z-10 -mb-8 mx-auto w-[82%] max-w-[220px] shadow-[0_18px_30px_rgba(15,23,42,0.12)]">
+                  {person.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={person.photo}
+                      alt={person.title}
+                      className="aspect-[3.8/5] w-full rounded-[1.35rem] object-cover object-center bg-transparent"
+                      style={{ objectPosition: 'center 18%' }}
+                    />
+                  ) : (
+                    <div className="aspect-[3.8/5] w-full overflow-hidden rounded-[1.35rem] bg-transparent">
                       <PhotoPlaceholder className="h-full w-full" />
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="rounded-2xl border border-border bg-card px-4 pt-5 pb-4 flex flex-col flex-1 -mt-2">
+                <div className="rounded-2xl border border-border bg-card px-4 pt-12 pb-4 flex flex-col flex-1">
                   {/* Red title only — no duplicate black name */}
                   <p
                     className="text-[11px] font-bold uppercase tracking-[0.12em] text-secondary"
