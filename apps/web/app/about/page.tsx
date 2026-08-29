@@ -197,21 +197,22 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {EXECUTIVES.map((person, i) => (
-              <div key={i} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col shadow-sm">
-                {/* Photo — fills card top */}
-                {person.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={person.photo}
-                    alt={person.title}
-                    className="w-full aspect-[4/3] object-cover object-top"
-                  />
-                ) : (
-                  <PhotoPlaceholder className="w-full aspect-[3/4]" />
-                )}
+              <div key={i} className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col shadow-sm">
+                <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted">
+                  {person.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={person.photo}
+                      alt={person.title}
+                      className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-[1.02]"
+                    />
+                  ) : (
+                    <PhotoPlaceholder className="h-full w-full" />
+                  )}
+                </div>
 
                 {/* Info — below photo, tight gap */}
-                <div className="rounded-full px-4 pt-3 pb-4 flex flex-col flex-1">
+                <div className="px-4 pt-3 pb-4 flex flex-col flex-1">
                   {/* Red title only — no duplicate black name */}
                   <p
                     className="text-[11px] font-bold uppercase tracking-[0.12em] text-secondary"
@@ -284,17 +285,19 @@ export default function AboutPage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {TEAM.map((person, i) => (
-              <div key={i} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
-                {person.photo ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={person.photo}
-                    alt={person.name}
-                    className="w-full aspect-square object-cover object-top"
-                  />
-                ) : (
-                  <PhotoPlaceholder className="w-full aspect-square" />
-                )}
+              <div key={i} className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col shadow-sm">
+                <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted">
+                  {person.photo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={person.photo}
+                      alt={person.name}
+                      className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-[1.02]"
+                    />
+                  ) : (
+                    <PhotoPlaceholder className="h-full w-full" />
+                  )}
+                </div>
                 <div className="p-3">
                   <p className="font-semibold text-foreground text-sm leading-tight">{person.name}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{person.title}</p>
