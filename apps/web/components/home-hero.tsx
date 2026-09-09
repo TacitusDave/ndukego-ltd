@@ -137,7 +137,7 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
           className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-10"
         >
           Ndukego Investment &amp; Properties Ltd delivers verified real estate,
-          LPO financing, investment capital, and expert consultancy — all under one roof.
+          LPO financing, investment capital, and expert consultancy all under one roof.
         </motion.p>
 
         {/* Search bar — centered */}
