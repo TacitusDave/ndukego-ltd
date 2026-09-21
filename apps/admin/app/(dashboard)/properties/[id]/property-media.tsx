@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { ImagePlus, Star, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const API_IMAGE_BASE =
-  process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") ?? "http://localhost:4000";
+import { mediaUrl } from "@/lib/media";
 
 interface Media {
   id: string;
@@ -159,7 +157,7 @@ export function PropertyMedia({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`${API_IMAGE_BASE}${m.url}`}
+                src={mediaUrl(m.url)}
                 alt={m.title ?? "Property image"}
                 className="w-full h-full object-cover"
               />

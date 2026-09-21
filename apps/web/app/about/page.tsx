@@ -48,7 +48,7 @@ const EXECUTIVES = [
   {
     title: "President & Executive Director",
     bio: "Leading the strategic direction and growth of Ndukego Investment & Properties Ltd with over a decade of real estate expertise.",
-    photo: null as string | null,
+    photo: "/executive-director.png",
     instagram: null as string | null,
     tiktok: null as string | null,
     youtube: null as string | null,

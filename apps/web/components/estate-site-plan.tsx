@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect, useCallback } from "react";
 import { X, ZoomIn, ZoomOut, RotateCcw, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
-import { API_IMAGE_BASE } from "@/lib/api";
+import { mediaUrl } from "@/lib/api";
 
 // ─── Prototype type ────────────────────────────────────────────────────────
 interface Prototype {
@@ -49,7 +49,7 @@ function toInternalPrototype(bt: DynamicBuildingType): Prototype {
 }
 
 function resolveImageUrl(url: string): string {
-  return url.startsWith("/uploads/") ? `${API_IMAGE_BASE}${url}` : url;
+  return mediaUrl(url);
 }
 
 // ─── Color matching ─────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CalendarCheck, Heart, ArrowRight, Building2 } from "lucide-react";
 import { getWebSession } from "@/lib/auth";
-import { publicFetch, API_IMAGE_BASE } from "@/lib/api";
+import { publicFetch, mediaUrl } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 interface ReservationItem {
@@ -164,7 +164,7 @@ export default async function AccountPage() {
                   <div className="h-16 w-16 shrink-0 rounded-md overflow-hidden bg-muted">
                     {cover ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={`${API_IMAGE_BASE}${cover.url}`} alt={fav.property.title} className="h-full w-full object-cover" />
+                      <img src={mediaUrl(cover.url)} alt={fav.property.title} className="h-full w-full object-cover" />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center">
                         <Building2 className="h-6 w-6 text-muted-foreground/40" />

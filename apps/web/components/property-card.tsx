@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useState, useRef, useEffect } from "react";
 import { MapPin, Bed, Bath, Maximize2, Building2 } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
-import { API_IMAGE_BASE } from "@/lib/api";
+import { mediaUrl } from "@/lib/api";
 import { FavoriteButton } from "@/components/favorite-button";
 
 interface Media {
@@ -52,6 +55,17 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 export function PropertyCard({ property }: { property: PropertyCardData }) {
   const cover = property.media.find((m) => m.isCover) ?? property.media[0];
+  const [imgFailed, setImgFailed] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Images can fail before hydration, in which case the error event fires
+  // before React attaches listeners — re-check via the DOM on mount.
+  useEffect(() => {
+    const el = imgRef.current;
+    if (el && el.complete && el.naturalWidth === 0) setImgFailed(true);
+  }, []);
+
+  const showImage = cover && !imgFailed;
 
   return (
     <Link
@@ -60,11 +74,13 @@ export function PropertyCard({ property }: { property: PropertyCardData }) {
     >
       {/* Image */}
       <div className="relative aspect-[16/10] bg-muted overflow-hidden">
-        {cover ? (
+        {showImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={`${API_IMAGE_BASE}${cover.url}`}
+            ref={imgRef}
+            src={mediaUrl(cover.url)}
             alt={property.title}
+            onError={() => setImgFailed(true)}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (

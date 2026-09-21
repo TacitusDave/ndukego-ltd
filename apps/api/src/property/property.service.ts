@@ -4,17 +4,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { extname, join } from 'path';
-import { mkdir, writeFile, unlink } from 'fs/promises';
+import { extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { EmailService } from '../email/email.service';
+import { StorageService } from '../storage/storage.service';
 import { generateReference, slugify, isValidPropertyStatusTransition, calculatePagination } from '@nhgp/lib';
 import { PropertyStatus, Prisma } from '@nhgp/database';
 import { AuthenticatedUser } from '@nhgp/types';
-
-const UPLOADS_ROOT = join(process.cwd(), 'storage', 'uploads');
 
 function extractCoordsFromUrl(url: string): { lat: number; lng: number } | null {
   const atMatch = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
@@ -30,6 +28,7 @@ export class PropertyService {
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
     private readonly emailService: EmailService,
+    private readonly storage: StorageService,
   ) {}
 
   async create(data: Prisma.PropertyCreateInput & { estateId?: string; developmentId?: string }, user: AuthenticatedUser) {
@@ -307,13 +306,10 @@ export class PropertyService {
   async hardDelete(id: string, user: AuthenticatedUser) {
     const property = await this.findOne(id);
 
-    // Delete all media files from filesystem first
+    // Delete all media files from storage first
     const mediaRecords = await this.prisma.propertyMedia.findMany({ where: { propertyId: id } });
     await Promise.allSettled(
-      mediaRecords.map((m) => {
-        const filePath = join(UPLOADS_ROOT, m.url.replace('/uploads/', ''));
-        return unlink(filePath).catch(() => undefined);
-      }),
+      mediaRecords.map((m) => this.storage.delete(m.url.replace('/uploads/', ''))),
     );
 
     // Delete related records that don't have CASCADE, then delete the property
@@ -356,9 +352,8 @@ export class PropertyService {
 
     const ext = extname(file.originalname) || `.${file.mimetype.split('/')[1]}`;
     const filename = `${uuidv4()}${ext}`;
-    const dir = join(UPLOADS_ROOT, 'properties', propertyId);
-    await mkdir(dir, { recursive: true });
-    await writeFile(join(dir, filename), file.buffer);
+    const storagePath = `properties/${propertyId}/${filename}`;
+    await this.storage.store(storagePath, file.buffer);
 
     const isCover = body.isCover ?? false;
 
@@ -391,8 +386,7 @@ export class PropertyService {
     });
     if (!media) throw new NotFoundException('Media not found');
 
-    const filePath = join(UPLOADS_ROOT, media.url.replace('/uploads/', ''));
-    await unlink(filePath).catch(() => undefined);
+    await this.storage.delete(media.url.replace('/uploads/', '')).catch(() => undefined);
     await this.prisma.propertyMedia.delete({ where: { id: mediaId } });
 
     if (media.isCover) {

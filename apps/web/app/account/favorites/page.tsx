@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Heart, ArrowRight } from "lucide-react";
 import { getWebSession } from "@/lib/auth";
-import { publicFetch, API_IMAGE_BASE } from "@/lib/api";
+import { publicFetch, mediaUrl } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 
 interface FavoriteProperty {
@@ -76,7 +76,7 @@ export default async function FavoritesPage() {
                   {cover ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={`${API_IMAGE_BASE}${cover.url}`}
+                      src={mediaUrl(cover.url)}
                       alt={fav.property.title}
                       className="w-full h-full object-cover"
                     />

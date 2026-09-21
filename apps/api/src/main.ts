@@ -1,18 +1,61 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { join } from 'path';
+import type { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
+import { extname } from 'path';
 import { AppModule } from './app.module';
+import { StorageService } from './storage/storage.service';
+
+const MIME_BY_EXT: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+  '.heic': 'image/heic',
+  '.heif': 'image/heif',
+  '.svg': 'image/svg+xml',
+  '.pdf': 'application/pdf',
+  '.doc': 'application/msword',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.xls': 'application/vnd.ms-excel',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+};
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.useStaticAssets(join(process.cwd(), 'storage', 'uploads'), {
-    prefix: '/uploads',
-  });
-
   app.use(helmet());
+
+  // Serve uploaded media from storage (Postgres blobs, with disk fallback for
+  // legacy files). Media must be reachable cross-origin from the Vercel apps,
+  // so CORP is explicitly set to `cross-origin`.
+  const storage = app.get(StorageService);
+  const logger = new Logger('Uploads');
+  app.use('/uploads', (req: Request, res: Response, next: NextFunction) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+    void (async () => {
+      try {
+        const relativePath = decodeURIComponent(req.path).replace(/^\/+/, '');
+        if (!relativePath || relativePath.includes('..')) {
+          return res.status(400).end();
+        }
+        const buffer = await storage.read(relativePath);
+        res.setHeader(
+          'Content-Type',
+          MIME_BY_EXT[extname(relativePath).toLowerCase()] ?? 'application/octet-stream',
+        );
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        return res.status(200).send(buffer);
+      } catch {
+        logger.warn(`Upload not found: ${req.path}`);
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        return res.status(404).end();
+      }
+    })();
+  });
 
   const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001')
     .split(',')

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Home, MapPin, CalendarCheck, TrendingUp,
   Users, MessageSquare, UserCog, FileText, BarChart3, Settings, LogOut,
-  ClipboardList,
+  ClipboardList, Image as ImageIcon,
 } from "lucide-react";
 import { LogoIcon } from "@nhgp/assets";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ const NAV_GROUPS: {
       { label: "Dashboard",    href: "/dashboard",    icon: LayoutDashboard, exact: true, section: "dashboard" },
       { label: "Properties",   href: "/properties",   icon: Home,            section: "properties" },
       { label: "Estates",      href: "/estates",      icon: MapPin,          section: "estates" },
+      { label: "Posters",      href: "/posters",      icon: ImageIcon,       section: "properties" },
     ],
   },
   {

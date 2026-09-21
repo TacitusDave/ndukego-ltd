@@ -1,14 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { extname, join } from 'path';
-import { mkdir, writeFile, unlink } from 'fs/promises';
+import { extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { StorageService } from '../storage/storage.service';
 import { calculatePagination, slugify, generateReference } from '@nhgp/lib';
 import { AuthenticatedUser } from '@nhgp/types';
 import { Prisma } from '@nhgp/database';
-
-const UPLOADS_ROOT = join(process.cwd(), 'storage', 'uploads');
 
 function extractCoordsFromUrl(url: string): { lat: number; lng: number } | null {
   const atMatch = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
@@ -20,7 +18,11 @@ function extractCoordsFromUrl(url: string): { lat: number; lng: number } | null 
 
 @Injectable()
 export class EstateService {
-  constructor(private readonly prisma: PrismaService, private readonly auditService: AuditService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+    private readonly storage: StorageService,
+  ) {}
 
   async create(data: Record<string, unknown>, user: AuthenticatedUser) {
     const slug = slugify(String(data.name)) + '-' + Date.now().toString(36);
@@ -122,16 +124,14 @@ export class EstateService {
 
     const ext = extname(file.originalname) || `.${file.mimetype.split('/')[1]}`;
     const filename = `site-plan-${uuidv4()}${ext}`;
-    const dir = join(UPLOADS_ROOT, 'estates', id, 'site-plan');
-    await mkdir(dir, { recursive: true });
-    await writeFile(join(dir, filename), file.buffer);
+    const storagePath = `estates/${id}/site-plan/${filename}`;
+    await this.storage.store(storagePath, file.buffer);
 
     const url = `/uploads/estates/${id}/site-plan/${filename}`;
 
     // Remove old site plan file if it exists
     if (estate.masterPlanUrl) {
-      const oldPath = join(UPLOADS_ROOT, estate.masterPlanUrl.replace('/uploads/', ''));
-      await unlink(oldPath).catch(() => undefined);
+      await this.storage.delete(estate.masterPlanUrl.replace('/uploads/', '')).catch(() => undefined);
     }
 
     await this.prisma.estate.update({ where: { id }, data: { masterPlanUrl: url } });
@@ -166,17 +166,17 @@ export class EstateService {
 
     const ext = extname(file.originalname) || `.${file.mimetype.split('/')[1]}`;
     const filename = `${uuidv4()}${ext}`;
-    const dir = join(UPLOADS_ROOT, 'estates', id, 'building-types', typeId);
-    await mkdir(dir, { recursive: true });
-    await writeFile(join(dir, filename), file.buffer);
+    const storagePath = `estates/${id}/building-types/${typeId}/${filename}`;
+    await this.storage.store(storagePath, file.buffer);
 
     const url = `/uploads/estates/${id}/building-types/${typeId}/${filename}`;
     return { url };
   }
 
   async deleteBuildingTypeImage(id: string, typeId: string, filename: string) {
-    const filePath = join(UPLOADS_ROOT, 'estates', id, 'building-types', typeId, filename);
-    await unlink(filePath).catch(() => undefined);
+    await this.storage
+      .delete(`estates/${id}/building-types/${typeId}/${filename}`)
+      .catch(() => undefined);
     return { success: true };
   }
 
@@ -195,10 +195,7 @@ export class EstateService {
       where: { property: { estateId: id } },
     });
     await Promise.allSettled(
-      mediaRecords.map((m) => {
-        const filePath = join(UPLOADS_ROOT, m.url.replace('/uploads/', ''));
-        return unlink(filePath).catch(() => undefined);
-      }),
+      mediaRecords.map((m) => this.storage.delete(m.url.replace('/uploads/', ''))),
     );
 
     // Delete soft-deleted properties first, then the estate (phases/blocks/infra cascade)

@@ -46,12 +46,12 @@ export default function LpoFinancingPage() {
             </h1>
             <p className="text-lg text-gray-500 max-w-2xl leading-relaxed mb-10">
               Don&apos;t let cash flow gaps stop you from executing government or corporate contracts.
-              We finance the gap so you can deliver — and profit.
+              We finance the gap so you can deliver and profit.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
                 href={`/contact?message=${encodeURIComponent("Hi, I have an LPO and would like to apply for LPO financing. Please contact me to discuss.")}`}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#A0111C] px-7 py-3.5 text-sm font-semibold text-white hover:bg-[#B41523] transition-colors shadow-sm shadow-[#A0111C]/15"
+                className="inline-flex items-center gap-2 rounded bg-[#A0111C] px-7 py-3.5 text-sm font-semibold text-white hover:bg-[#B41523] transition-colors shadow-sm shadow-[#A0111C]/15"
               >
                 Apply Now <ArrowRight className="h-4 w-4" />
               </Link>
@@ -78,7 +78,7 @@ export default function LpoFinancingPage() {
               <p className="text-gray-500 leading-relaxed mb-5">
                 A Local Purchase Order (LPO) is a formal commitment from a government body or
                 large corporation to purchase goods or services from your business. It&apos;s
-                valuable — but it doesn&apos;t pay your suppliers or staff today.
+                valuable but it doesn&apos;t pay your suppliers or staff today.
               </p>
               <p className="text-gray-500 leading-relaxed">
                 LPO Financing means we advance you the capital you need to execute the contract

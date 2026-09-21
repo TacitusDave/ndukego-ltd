@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, X, Images } from "lucide-react";
-import { API_IMAGE_BASE } from "@/lib/api";
+import { mediaUrl } from "@/lib/api";
 
 interface Media {
   id: string;
@@ -30,17 +30,35 @@ function GallerySlot({
   extraCount?: number;
   showOverlay?: boolean;
 }) {
+  const [failed, setFailed] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Images can fail before hydration; re-check via the DOM on mount.
+  useEffect(() => {
+    const el = imgRef.current;
+    if (el && el.complete && el.naturalWidth === 0) setFailed(true);
+  }, []);
+
   return (
     <div
       onClick={() => onOpen(index)}
       className="relative overflow-hidden bg-gray-100 cursor-pointer"
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={`${API_IMAGE_BASE}${m.url}`}
-        alt={m.title ?? `Photo ${index + 1}`}
-        className="w-full h-full object-cover"
-      />
+      {failed ? (
+        <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+          <Images className="h-8 w-8 mb-1" />
+          <span className="text-xs">Image unavailable</span>
+        </div>
+      ) : (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          ref={imgRef}
+          src={mediaUrl(m.url)}
+          alt={m.title ?? `Photo ${index + 1}`}
+          onError={() => setFailed(true)}
+          className="w-full h-full object-cover"
+        />
+      )}
       {showOverlay && extraCount != null && extraCount > 0 && (
         <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center">
           <span className="text-3xl font-bold text-white">+{extraCount}</span>
@@ -56,6 +74,17 @@ export function PropertyGallery({ media, propertyTitle }: PropertyGalleryProps) 
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [heroFailed, setHeroFailed] = useState(false);
+  const [mobileFailed, setMobileFailed] = useState(false);
+  const heroRef = useRef<HTMLImageElement>(null);
+  const mobileRef = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const el = heroRef.current;
+    if (el && el.complete && el.naturalWidth === 0) setHeroFailed(true);
+    const mob = mobileRef.current;
+    if (mob && mob.complete && mob.naturalWidth === 0) setMobileFailed(true);
+  }, []);
 
   const total = media.length;
 
@@ -108,12 +137,21 @@ export function PropertyGallery({ media, propertyTitle }: PropertyGalleryProps) 
             style={{ height: 460 }}
             onClick={() => openLightbox(0)}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`${API_IMAGE_BASE}${media[0].url}`}
-              alt={propertyTitle}
-              className="w-full h-full object-cover"
-            />
+            {heroFailed ? (
+              <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                <Images className="h-10 w-10 mb-2" />
+                <span className="text-sm">Image unavailable</span>
+              </div>
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                ref={heroRef}
+                src={mediaUrl(media[0].url)}
+                alt={propertyTitle}
+                onError={() => setHeroFailed(true)}
+                className="w-full h-full object-cover"
+              />
+            )}
           </div>
         )}
 
@@ -170,12 +208,21 @@ export function PropertyGallery({ media, propertyTitle }: PropertyGalleryProps) 
           onTouchEnd={(e) => onTouchEnd(e, mobPrev, mobNext)}
           onClick={() => openLightbox(mobileIndex)}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={`${API_IMAGE_BASE}${media[mobileIndex].url}`}
-            alt={propertyTitle}
-            className="w-full h-full object-cover"
-          />
+          {mobileFailed ? (
+            <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+              <Images className="h-10 w-10 mb-2" />
+              <span className="text-sm">Image unavailable</span>
+            </div>
+          ) : (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              ref={mobileRef}
+              src={mediaUrl(media[mobileIndex].url)}
+              alt={propertyTitle}
+              onError={() => setMobileFailed(true)}
+              className="w-full h-full object-cover"
+            />
+          )}
           <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
 
           {total > 1 && (
@@ -270,7 +317,7 @@ export function PropertyGallery({ media, propertyTitle }: PropertyGalleryProps) 
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               key={lightboxIndex}
-              src={`${API_IMAGE_BASE}${media[lightboxIndex].url}`}
+              src={mediaUrl(media[lightboxIndex].url)}
               alt={media[lightboxIndex].title ?? propertyTitle}
               className="max-h-[75vh] max-w-[76vw] object-contain rounded-xl shadow-2xl"
             />
@@ -313,7 +360,7 @@ export function PropertyGallery({ media, propertyTitle }: PropertyGalleryProps) 
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`${API_IMAGE_BASE}${m.url}`}
+                    src={mediaUrl(m.url)}
                     alt=""
                     className="w-full h-full object-cover"
                   />

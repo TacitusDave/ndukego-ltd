@@ -22,6 +22,7 @@ import { NotificationModule } from './notification/notification.module';
 import { AiModule } from './ai/ai.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { EmailModule } from './email/email.module';
+import { PosterModule } from './poster/poster.module';
 import { HealthController } from './health/health.controller';
 
 @Module({
@@ -48,6 +49,7 @@ import { HealthController } from './health/health.controller';
     NotificationModule,
     AiModule,
     DashboardModule,
+    PosterModule,
   ],
   controllers: [HealthController],
   providers: [

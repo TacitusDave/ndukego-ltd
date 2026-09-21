@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { API_IMAGE_BASE } from "@/lib/api";
+import { mediaUrl } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import "leaflet/dist/leaflet.css";
 
@@ -73,7 +73,7 @@ export function PropertiesMapClient({ properties }: Props) {
 
       for (const prop of properties) {
         const imgTag = prop.coverUrl
-          ? `<img src="${API_IMAGE_BASE}${prop.coverUrl}" style="width:100%;height:110px;object-fit:cover;border-radius:6px 6px 0 0;display:block;" alt="" />`
+          ? `<img src="${mediaUrl(prop.coverUrl)}" style="width:100%;height:110px;object-fit:cover;border-radius:6px 6px 0 0;display:block;" alt="" />`
           : "";
 
         const priceText = prop.listingPrice

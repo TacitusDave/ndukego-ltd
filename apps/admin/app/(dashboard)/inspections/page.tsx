@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Header } from "@/components/layout/header";
+import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
 import { ScheduleInspectionButton } from "./schedule-inspection-button";
 import { formatDate } from "@/lib/utils";

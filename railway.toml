@@ -3,7 +3,9 @@ builder = "nixpacks"
 buildCommand = "pnpm --filter=@nhgp/types run build && pnpm --filter=@nhgp/database run build && pnpm --filter=@nhgp/lib run build && pnpm --filter=@nhgp/config run build && pnpm --filter=@nhgp/validation run build && pnpm --filter=api run build"
 
 [deploy]
-startCommand = "node apps/api/dist/main"
+# Apply the Prisma schema (e.g. upload_files / posters tables) before boot so
+# a fresh database is always in sync with the deployed API.
+startCommand = "cd packages/database && npx prisma db push --skip-generate && cd ../../ && node apps/api/dist/main"
 healthcheckPath = "/api/v1/health"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
