@@ -58,6 +58,21 @@ export default async function PropertyDetailPage({
   const { id } = await params;
   const { data: property, error } = await apiFetch<Property>(`/properties/${id}`);
 
+  // A deleted/gone record is a genuine 404; auth or server errors must not
+  // render "Page not found" — show an explanatory error screen instead.
+  if (error && /token|unauthorized|forbidden|reach api/i.test(error)) {
+    return (
+      <div className="flex h-full items-center justify-center p-10">
+        <div className="max-w-md rounded-lg border border-red-100 bg-red-50/60 p-6 text-center">
+          <p className="text-sm font-semibold text-red-700">Could not load this property</p>
+          <p className="mt-1 text-xs text-red-500">{error}</p>
+          <Link href="/properties" className="mt-4 inline-block text-xs font-semibold text-red-700 underline">
+            Back to properties
+          </Link>
+        </div>
+      </div>
+    );
+  }
   if (error || !property) notFound();
 
   return (

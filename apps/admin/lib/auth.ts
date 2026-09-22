@@ -108,7 +108,21 @@ export async function getSession() {
   }
 }
 
+// Single-flight guard: parallel RSC renders / proxy calls can each hit
+// refresh() in the same tick. Sharing one in-flight promise avoids hammering
+// the API with duplicate refresh requests (and, with token rotation enabled
+// server-side, would otherwise race to revoke each other's tokens).
+let refreshInFlight: Promise<boolean> | null = null;
+
 export async function refreshSession() {
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = doRefreshSession().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+async function doRefreshSession() {
   const cookieStore = await cookies();
   const refreshToken = cookieStore.get("refresh_token")?.value;
   if (!refreshToken) return false;
@@ -119,6 +133,7 @@ export async function refreshSession() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),
+      cache: "no-store",
     });
   } catch {
     return false;

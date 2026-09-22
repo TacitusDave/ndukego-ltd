@@ -350,12 +350,23 @@ export class AuthService {
       user.employeeId,
     );
 
+    // Slide the refresh-token expiry but do NOT rotate/revoke it. Rotation
+    // broke both portals: whichever client refreshed first invalidated every
+    // other tab/request still holding the old token, and clients that failed
+    // to persist the replacement were locked out after the first refresh.
+    // A stable token with a sliding 7-day window is safe behind httpOnly
+    // cookies and keeps concurrent refreshes (multiple tabs, parallel RSC
+    // fetches) idempotent.
+    const refreshExpiry =
+      this.configService.get<string>('JWT_REFRESH_EXPIRY') || '7d';
     await this.prisma.refreshToken.update({
       where: { id: stored.id },
-      data: { revokedAt: new Date() },
+      data: {
+        expiresAt: new Date(Date.now() + this.parseExpiry(refreshExpiry)),
+      },
     });
 
-    return this.generateTokens(
+    const tokens = await this.generateTokens(
       user.id,
       user.email,
       user.type,
@@ -366,7 +377,13 @@ export class AuthService {
       },
       ipAddress,
       userAgent,
+      { issueRefreshToken: false }, // reuse the existing refresh token
     );
+
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: stored.token,
+    };
   }
 
   async logout(userId: string, refreshToken?: string, ipAddress?: string) {
@@ -635,6 +652,7 @@ export class AuthService {
     ids: { employeeId?: string; customerId?: string },
     ipAddress?: string,
     userAgent?: string,
+    options?: { issueRefreshToken?: boolean },
   ) {
     const payload: JwtPayload = {
       sub: userId,
@@ -650,24 +668,29 @@ export class AuthService {
         '15m') as JwtSignOptions['expiresIn'], // jwt expects ms-literal | number
     });
 
-    const refreshTokenValue = randomBytes(64).toString('hex');
+    const issueRefreshToken = options?.issueRefreshToken !== false;
     const refreshExpiry: string =
       this.configService.get<string>('JWT_REFRESH_EXPIRY') || '7d';
-    const expiresAt = new Date(Date.now() + this.parseExpiry(refreshExpiry));
 
-    await this.prisma.refreshToken.create({
-      data: {
-        token: refreshTokenValue,
-        userId,
-        expiresAt,
-        ipAddress,
-        userAgent,
-      },
-    });
+    let refreshTokenValue: string | undefined;
+    if (issueRefreshToken) {
+      refreshTokenValue = randomBytes(64).toString('hex');
+      const expiresAt = new Date(Date.now() + this.parseExpiry(refreshExpiry));
+
+      await this.prisma.refreshToken.create({
+        data: {
+          token: refreshTokenValue,
+          userId,
+          expiresAt,
+          ipAddress,
+          userAgent,
+        },
+      });
+    }
 
     return {
       accessToken,
-      refreshToken: refreshTokenValue,
+      refreshToken: refreshTokenValue as string,
       expiresIn: refreshExpiry,
     };
   }

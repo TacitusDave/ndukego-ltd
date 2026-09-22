@@ -4,7 +4,19 @@ import { NextRequest, NextResponse } from "next/server";
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
 
-async function tryRefresh(): Promise<string | null> {
+// Single-flight guard: multiple proxy calls can fire in the same render tick;
+// share one in-flight refresh instead of racing N duplicate requests.
+let refreshInFlight: Promise<string | null> | null = null;
+
+function tryRefresh(): Promise<string | null> {
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = doTryRefresh().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+async function doTryRefresh(): Promise<string | null> {
   const cookieStore = await cookies();
   const refreshToken = cookieStore.get("refresh_token")?.value;
   if (!refreshToken) return null;
@@ -15,6 +27,7 @@ async function tryRefresh(): Promise<string | null> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),
+      cache: "no-store",
     });
   } catch {
     return null;
