@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { CustomerService } from './customer.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
@@ -22,7 +32,15 @@ export class CustomerController {
     @Query('kycStatus') kycStatus?: string,
     @Query('leadSource') leadSource?: string,
   ) {
-    return this.customerService.findAll({ page, limit, search, status, type, kycStatus, leadSource });
+    return this.customerService.findAll({
+      page,
+      limit,
+      search,
+      status,
+      type,
+      kycStatus,
+      leadSource,
+    });
   }
 
   @Get(':id')
@@ -33,7 +51,10 @@ export class CustomerController {
 
   @Post()
   @RequirePermissions('customer.create')
-  create(@Body() body: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+  create(
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.customerService.create(body, user);
   }
 

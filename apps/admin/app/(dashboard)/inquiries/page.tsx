@@ -80,7 +80,8 @@ export default function InquiriesPage() {
     finally { setLoading(false); }
   }, [page, status, search]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  // Deferred so the initial fetch's setState never runs synchronously in the effect.
+  useEffect(() => { void Promise.resolve().then(() => fetchData()); }, [fetchData]);
 
   async function updateStatus(id: string, newStatus: string) {
     setUpdating(id);

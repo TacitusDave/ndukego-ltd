@@ -1,13 +1,38 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, CheckCircle, Home, Building, MapPin, Layers } from "lucide-react";
+import { publicFetch } from "@/lib/api";
 import { AnimateIn } from "@/components/animate-in";
 import { PosterList } from "@/components/posters";
+import { PropertyCard, type PropertyCardData } from "@/components/property-card";
+import { EstateCard } from "@/components/estate-card";
 
 export const metadata: Metadata = {
   title: "Real Estate",
   description: "Verified residential, commercial, and land listings across Nigeria. Every property is title-checked and inspection-cleared by Ndukego Investment & Properties Ltd.",
 };
+
+interface Estate {
+  id: string;
+  name: string;
+  state: string;
+  city: string | null;
+  shortDescription: string | null;
+  totalPlots: number | null;
+  availablePlots: number | null;
+  coverImageUrl: string | null;
+  _count: { properties: number };
+}
+
+interface EstatesResponse {
+  items: Estate[];
+  meta: { total: number };
+}
+
+interface PropertiesResponse {
+  items: PropertyCardData[];
+  meta: { total: number };
+}
 
 const OFFERINGS = [
   {
@@ -40,7 +65,15 @@ const OFFERINGS = [
   },
 ];
 
-export default function RealEstatePage() {
+export default async function RealEstatePage() {
+  const [propertiesRes, estatesRes] = await Promise.all([
+    publicFetch<PropertiesResponse>("/properties/public?featured=true&limit=6"),
+    publicFetch<EstatesResponse>("/estates/public?featured=true&limit=4"),
+  ]);
+
+  const featuredProperties = propertiesRes.data?.items ?? [];
+  const featuredEstates = estatesRes.data?.items ?? [];
+
   return (
     <>
       {/* Hero */}
@@ -108,6 +141,108 @@ export default function RealEstatePage() {
           </div>
         </div>
       </section>
+
+      {/* ── Featured properties ───────────────────── */}
+      <section className="relative py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <AnimateIn>
+            <div className="flex items-end justify-between mb-12">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-[#A0111C] mb-3">
+                  Featured Listings
+                </p>
+                <h2
+                  className="text-3xl font-bold text-gray-900"
+                  style={{ fontFamily: "var(--font-display)" }}
+                >
+                  {featuredProperties.length > 0 ? "Handpicked properties for you" : "Available properties"}
+                </h2>
+              </div>
+              <Link
+                href="/properties"
+                className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-[#A0111C] hover:text-[#B41523] transition-colors"
+              >
+                View all <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </AnimateIn>
+
+          {featuredProperties.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredProperties.map((p, i) => (
+                <AnimateIn key={p.id} delay={i * 0.07}>
+                  <PropertyCard property={p} />
+                </AnimateIn>
+              ))}
+            </div>
+          ) : (
+            <AnimateIn delay={0.1}>
+              <div className="rounded-2xl border border-gray-100 bg-white/70 p-16 text-center shadow-sm">
+                <Building className="h-10 w-10 mx-auto text-gray-300 mb-4" />
+                <p className="font-semibold text-gray-600">Listings coming soon</p>
+                <p className="text-sm text-gray-400 mt-2">
+                  We&apos;re adding new verified properties. Check back shortly.
+                </p>
+              </div>
+            </AnimateIn>
+          )}
+
+          <div className="mt-10 text-center sm:hidden">
+            <Link
+              href="/properties"
+              className="inline-flex items-center gap-2 rounded bg-[#A0111C] px-6 py-3 text-sm font-semibold text-white hover:bg-[#B41523] transition-colors"
+            >
+              View all properties <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Featured estates ──────────────────────── */}
+      {featuredEstates.length > 0 && (
+        <section className="relative py-20 bg-white/40">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <AnimateIn>
+              <div className="flex items-end justify-between mb-12">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#A0111C] mb-3">
+                    Our Estates
+                  </p>
+                  <h2
+                    className="text-3xl font-bold text-gray-900"
+                    style={{ fontFamily: "var(--font-display)" }}
+                  >
+                    Planned communities to call home
+                  </h2>
+                </div>
+                <Link
+                  href="/estates"
+                  className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-[#A0111C] hover:text-[#B41523] transition-colors"
+                >
+                  View all <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </AnimateIn>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {featuredEstates.map((e, i) => (
+                <AnimateIn key={e.id} delay={i * 0.1}>
+                  <EstateCard estate={e} />
+                </AnimateIn>
+              ))}
+            </div>
+
+            <div className="mt-10 text-center">
+              <Link
+                href="/estates"
+                className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                Explore all estates <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Posters Section */}
       <section className="relative py-20">

@@ -52,6 +52,9 @@ export interface PublicPoster {
   description: string | null;
   imageUrl: string | null;
   linkUrl: string | null;
+  width?: number | null;
+  height?: number | null;
+  groupName?: string | null;
   sortOrder: number;
   createdAt: string;
 }

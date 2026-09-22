@@ -59,7 +59,7 @@ export function HomeProcess() {
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
       >
         <div
-          className="w-[560px] h-[560px] rounded-full border border-[#A0111C]/15"
+          className="w-[560px] h-[560px] max-w-[150vw] max-h-[150vw] rounded-full border border-[#A0111C]/15"
           style={{ boxShadow: "0 0 80px 0 rgba(160,17,28,0.06)" }}
         />
       </motion.div>

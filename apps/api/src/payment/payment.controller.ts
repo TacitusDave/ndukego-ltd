@@ -24,7 +24,8 @@ export class PaymentController {
   @Post()
   @RequirePermissions('payment.create')
   record(
-    @Body() body: {
+    @Body()
+    body: {
       saleId: string;
       customerId: string;
       type: PaymentType;
@@ -50,7 +51,11 @@ export class PaymentController {
       transactionDate: new Date(body.transactionDate),
       notes: body.notes,
     };
-    return this.paymentService.record(dto, user.employeeId ?? user.id, user.email);
+    return this.paymentService.record(
+      dto,
+      user.employeeId ?? user.id,
+      user.email,
+    );
   }
 
   @Get()
@@ -62,7 +67,13 @@ export class PaymentController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
   ) {
-    return this.paymentService.findAll({ saleId, customerId, status, page, limit });
+    return this.paymentService.findAll({
+      saleId,
+      customerId,
+      status,
+      page,
+      limit,
+    });
   }
 
   @Get(':id')
@@ -74,7 +85,11 @@ export class PaymentController {
   @Patch(':id/verify')
   @RequirePermissions('payment.verify')
   verify(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
-    return this.paymentService.verify(id, user.employeeId ?? user.id, user.email);
+    return this.paymentService.verify(
+      id,
+      user.employeeId ?? user.id,
+      user.email,
+    );
   }
 
   @Patch(':id/reject')

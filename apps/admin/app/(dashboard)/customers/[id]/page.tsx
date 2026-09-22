@@ -168,7 +168,9 @@ export default function CustomerDetailPage() {
   };
 
   useEffect(() => {
-    loadCustomer();
+    // Deferred one microtask so state updates never run synchronously
+    // inside the effect (avoids cascading renders on mount).
+    void Promise.resolve().then(() => loadCustomer());
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 

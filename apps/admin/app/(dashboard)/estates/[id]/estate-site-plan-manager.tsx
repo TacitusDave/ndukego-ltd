@@ -217,7 +217,7 @@ export function EstateSitePlanManager({ estateId, masterPlanUrl, buildingTypes: 
 
         {types.length === 0 && (
           <p className="text-sm text-muted-foreground italic py-4 text-center border border-dashed rounded-lg">
-            No building types defined. Add building types to create a colour legend for this estate's site plan.
+            No building types defined. Add building types to create a colour legend for this estate&apos;s site plan.
           </p>
         )}
 
@@ -351,7 +351,7 @@ function BuildingTypeRow({
                 onChange={(e) => onUpdate({ comingSoon: e.target.checked })}
                 className="rounded"
               />
-              Mark as "Coming soon" (hides images, shows placeholder)
+              Mark as &quot;Coming soon&quot; (hides images, shows placeholder)
             </label>
           </div>
 

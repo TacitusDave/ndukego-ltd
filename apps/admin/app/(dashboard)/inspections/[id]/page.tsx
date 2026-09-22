@@ -99,7 +99,8 @@ export default function InspectionDetailPage() {
     }
   }, [id]);
 
-  useEffect(() => { load(); }, [load]);
+  // Deferred so the initial load's setState never runs synchronously in the effect.
+  useEffect(() => { void Promise.resolve().then(() => load()); }, [load]);
 
   async function callAction(path: string, body?: Record<string, unknown>) {
     setActionError("");

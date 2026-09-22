@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { EmployeeService } from './employee.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -15,7 +25,13 @@ export class EmployeeController {
     @Query('departmentId') departmentId?: string,
     @Query('status') status?: string,
   ) {
-    return this.employeeService.findAll({ page, limit, search, departmentId, status });
+    return this.employeeService.findAll({
+      page,
+      limit,
+      search,
+      departmentId,
+      status,
+    });
   }
 
   @Get('departments')
@@ -34,16 +50,19 @@ export class EmployeeController {
   }
 
   @Post()
-  create(@Body() body: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone?: string;
-    jobTitle: string;
-    departmentId?: string;
-    hireDate?: string;
-    password: string;
-  }) {
+  create(
+    @Body()
+    body: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone?: string;
+      jobTitle: string;
+      departmentId?: string;
+      hireDate?: string;
+      password: string;
+    },
+  ) {
     return this.employeeService.create(body);
   }
 

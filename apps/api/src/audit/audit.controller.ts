@@ -20,6 +20,13 @@ export class AuditController {
     @Query('actorId') actorId?: string,
     @Query('action') action?: AuditAction,
   ) {
-    return this.auditService.findAll({ page, limit, entityType, entityId, actorId, action });
+    return this.auditService.findAll({
+      page,
+      limit,
+      entityType,
+      entityId,
+      actorId,
+      action,
+    });
   }
 }

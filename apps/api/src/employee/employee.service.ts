@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { calculatePagination } from '@nhgp/lib';
@@ -13,7 +17,13 @@ function generateEmployeeNumber(): string {
 export class EmployeeService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(query: { page?: number; limit?: number; search?: string; departmentId?: string; status?: string }) {
+  async findAll(query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    departmentId?: string;
+    status?: string;
+  }) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const { skip } = calculatePagination(page, limit, 0);
@@ -39,13 +49,18 @@ export class EmployeeService {
         orderBy: { createdAt: 'desc' },
         include: {
           department: { select: { id: true, name: true } },
-          roles: { include: { role: { select: { id: true, name: true, code: true } } } },
+          roles: {
+            include: { role: { select: { id: true, name: true, code: true } } },
+          },
         },
       }),
       this.prisma.employee.count({ where: where as never }),
     ]);
 
-    return { items, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+    return {
+      items,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   async findOne(id: string) {
@@ -53,8 +68,12 @@ export class EmployeeService {
       where: { id },
       include: {
         department: { select: { id: true, name: true, code: true } },
-        roles: { include: { role: { select: { id: true, name: true, code: true } } } },
-        user: { select: { id: true, email: true, status: true, lastLoginAt: true } },
+        roles: {
+          include: { role: { select: { id: true, name: true, code: true } } },
+        },
+        user: {
+          select: { id: true, email: true, status: true, lastLoginAt: true },
+        },
       },
     });
     if (!employee) throw new NotFoundException('Employee not found');
@@ -71,14 +90,27 @@ export class EmployeeService {
     hireDate?: string;
     password: string;
   }) {
-    const existing = await this.prisma.employee.findFirst({ where: { email: data.email } });
-    if (existing) throw new ConflictException('An employee with this email already exists');
+    const existing = await this.prisma.employee.findFirst({
+      where: { email: data.email },
+    });
+    if (existing)
+      throw new ConflictException('An employee with this email already exists');
 
-    const userExists = await this.prisma.user.findUnique({ where: { email: data.email } });
-    if (userExists) throw new ConflictException('A user account with this email already exists');
+    const userExists = await this.prisma.user.findUnique({
+      where: { email: data.email },
+    });
+    if (userExists)
+      throw new ConflictException(
+        'A user account with this email already exists',
+      );
 
-    const company = await this.prisma.company.findFirst({ where: { deletedAt: null } });
-    if (!company) throw new NotFoundException('No company record found. Please create a company first.');
+    const company = await this.prisma.company.findFirst({
+      where: { deletedAt: null },
+    });
+    if (!company)
+      throw new NotFoundException(
+        'No company record found. Please create a company first.',
+      );
 
     const employeeNumber = generateEmployeeNumber();
     const passwordHash = await bcrypt.hash(data.password, 12);
@@ -94,7 +126,9 @@ export class EmployeeService {
         hireDate: data.hireDate ? new Date(data.hireDate) : new Date(),
         status: 'ACTIVE',
         company: { connect: { id: company.id } },
-        department: data.departmentId ? { connect: { id: data.departmentId } } : undefined,
+        department: data.departmentId
+          ? { connect: { id: data.departmentId } }
+          : undefined,
         user: {
           create: {
             email: data.email,
@@ -111,14 +145,17 @@ export class EmployeeService {
     });
   }
 
-  async update(id: string, data: {
-    firstName?: string;
-    lastName?: string;
-    phone?: string;
-    jobTitle?: string;
-    departmentId?: string;
-    status?: string;
-  }) {
+  async update(
+    id: string,
+    data: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      jobTitle?: string;
+      departmentId?: string;
+      status?: string;
+    },
+  ) {
     const employee = await this.prisma.employee.findUnique({ where: { id } });
     if (!employee) throw new NotFoundException('Employee not found');
 
@@ -130,14 +167,19 @@ export class EmployeeService {
         phone: data.phone,
         jobTitle: data.jobTitle,
         status: data.status as never,
-        department: data.departmentId ? { connect: { id: data.departmentId } } : undefined,
+        department: data.departmentId
+          ? { connect: { id: data.departmentId } }
+          : undefined,
       },
       include: { department: { select: { id: true, name: true } } },
     });
 
     // Sync linked user account status when employee status changes
     if (data.status) {
-      const userStatus = (data.status === 'INACTIVE' || data.status === 'TERMINATED') ? 'INACTIVE' : 'ACTIVE';
+      const userStatus =
+        data.status === 'INACTIVE' || data.status === 'TERMINATED'
+          ? 'INACTIVE'
+          : 'ACTIVE';
       await this.prisma.user.updateMany({
         where: { email: employee.email },
         data: { status: userStatus as never },
@@ -180,14 +222,18 @@ export class EmployeeService {
   }
 
   async assignRole(employeeId: string, roleId: string) {
-    const existing = await this.prisma.employeeRole.findFirst({ where: { employeeId, roleId } });
+    const existing = await this.prisma.employeeRole.findFirst({
+      where: { employeeId, roleId },
+    });
     if (existing) return { success: true, message: 'Role already assigned' };
     await this.prisma.employeeRole.create({ data: { employeeId, roleId } });
     return { success: true };
   }
 
   async removeRole(employeeId: string, roleId: string) {
-    await this.prisma.employeeRole.deleteMany({ where: { employeeId, roleId } });
+    await this.prisma.employeeRole.deleteMany({
+      where: { employeeId, roleId },
+    });
     return { success: true };
   }
 }

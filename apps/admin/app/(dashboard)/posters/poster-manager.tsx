@@ -15,8 +15,36 @@ export interface Poster {
   description: string | null;
   imageUrl: string;
   linkUrl: string | null;
+  width: number | null;
+  height: number | null;
+  groupName: string | null;
   sortOrder: number;
   isActive: boolean;
+}
+
+/** Read an image file's natural dimensions in the browser before upload. */
+function detectImageDimensions(file: File): Promise<{ width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => {
+      resolve(null);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
+  });
+}
+
+function orientationLabel(w?: number | null, h?: number | null) {
+  if (!w || !h) return null;
+  const r = w / h;
+  if (r > 1.05) return "Landscape";
+  if (r < 0.95) return "Portrait";
+  return "Square";
 }
 
 const API_IMAGE_BASE =
@@ -45,12 +73,16 @@ function UploadDialog({
   const [title, setTitle] = useState(poster?.title ?? "");
   const [description, setDescription] = useState(poster?.description ?? "");
   const [linkUrl, setLinkUrl] = useState(poster?.linkUrl ?? "");
+  const [groupName, setGroupName] = useState(poster?.groupName ?? "");
+  const [width, setWidth] = useState(poster?.width ? String(poster.width) : "");
+  const [height, setHeight] = useState(poster?.height ? String(poster.height) : "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isEdit = poster != null;
+  const orient = orientationLabel(Number(width), Number(height));
 
-  function pickFile(f: File | null) {
+  async function pickFile(f: File | null) {
     if (!f) return;
     if (f.size > 5 * 1024 * 1024) {
       setError("Image must be smaller than 5 MB");
@@ -59,6 +91,12 @@ function UploadDialog({
     setError(null);
     setFile(f);
     setPreview(URL.createObjectURL(f));
+    // Auto-fill dimensions from the file (server double-checks on upload).
+    const dims = await detectImageDimensions(f);
+    if (dims) {
+      setWidth(String(dims.width));
+      setHeight(String(dims.height));
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -77,6 +115,9 @@ function UploadDialog({
       if (title) fd.append("title", title);
       if (description) fd.append("description", description);
       if (linkUrl) fd.append("linkUrl", linkUrl);
+      fd.append("groupName", groupName); // empty string clears the group
+      if (width) fd.append("width", width);
+      if (height) fd.append("height", height);
 
       const res = await fetch(
         isEdit ? `/api/proxy/posters/${poster!.id}` : "/api/proxy/posters",
@@ -119,7 +160,7 @@ function UploadDialog({
               {isEdit ? "Edit poster" : "Upload poster"}
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Portrait posters look best · JPEG, PNG, WebP · up to 5 MB
+              Any size or shape works — the gallery adapts · JPEG, PNG, WebP · up to 5 MB
             </p>
           </div>
 
@@ -207,6 +248,48 @@ function UploadDialog({
               />
             </div>
 
+            <div className="grid gap-2">
+              <Label htmlFor="poster-group">Group / campaign (optional)</Label>
+              <Input
+                id="poster-group"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                placeholder="e.g. Jahi Terraces Launch — posters sharing a group appear together"
+              />
+            </div>
+
+            <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
+              <div className="grid gap-1">
+                <Label htmlFor="poster-width">Width (px)</Label>
+                <Input
+                  id="poster-width"
+                  inputMode="numeric"
+                  value={width}
+                  onChange={(e) => setWidth(e.target.value.replace(/[^0-9]/g, ""))}
+                  placeholder="auto"
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label htmlFor="poster-height">Height (px)</Label>
+                <Input
+                  id="poster-height"
+                  inputMode="numeric"
+                  value={height}
+                  onChange={(e) => setHeight(e.target.value.replace(/[^0-9]/g, ""))}
+                  placeholder="auto"
+                />
+              </div>
+              <div className="pb-2 text-xs text-muted-foreground whitespace-nowrap">
+                {orient ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 font-medium">
+                    {orient}
+                  </span>
+                ) : (
+                  "detected automatically"
+                )}
+              </div>
+            </div>
+
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
                 Cancel
@@ -271,8 +354,8 @@ export function PosterManager({ initialPosters }: { initialPosters: Poster[] }) 
         <div>
           <h2 className="text-sm font-semibold">Marketing posters</h2>
           <p className="text-xs text-muted-foreground">
-            {initialPosters.length} poster{initialPosters.length !== 1 ? "s" : ""} · shown on the
-            Real Estate page
+            {initialPosters.length} poster{initialPosters.length !== 1 ? "s" : ""} · shown in the
+            Real Estate gallery — any size works, shapes are preserved
           </p>
         </div>
         <Button
@@ -314,7 +397,10 @@ export function PosterManager({ initialPosters }: { initialPosters: Poster[] }) 
                 !poster.isActive && "opacity-60",
               )}
             >
-              <div className="aspect-[4/5] overflow-hidden">
+              <div
+                className="overflow-hidden"
+                style={{ aspectRatio: poster.width && poster.height ? `${poster.width} / ${poster.height}` : "4 / 5" }}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={posterImageUrl(poster.imageUrl)}
@@ -322,6 +408,21 @@ export function PosterManager({ initialPosters }: { initialPosters: Poster[] }) 
                   className="w-full h-full object-cover"
                 />
               </div>
+
+              {(poster.width || poster.groupName) && (
+                <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1">
+                  {poster.width && poster.height && (
+                    <span className="bg-black/60 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">
+                      {poster.width}×{poster.height}
+                    </span>
+                  )}
+                  {poster.groupName && (
+                    <span className="bg-primary/90 text-white text-[10px] font-medium px-1.5 py-0.5 rounded">
+                      {poster.groupName}
+                    </span>
+                  )}
+                </div>
+              )}
 
               {!poster.isActive && (
                 <div className="absolute top-1.5 left-1.5 bg-yellow-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">

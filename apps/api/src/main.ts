@@ -18,7 +18,8 @@ const MIME_BY_EXT: Record<string, string> = {
   '.svg': 'image/svg+xml',
   '.pdf': 'application/pdf',
   '.doc': 'application/msword',
-  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.docx':
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   '.xls': 'application/vnd.ms-excel',
   '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 };
@@ -44,7 +45,8 @@ async function bootstrap() {
         const buffer = await storage.read(relativePath);
         res.setHeader(
           'Content-Type',
-          MIME_BY_EXT[extname(relativePath).toLowerCase()] ?? 'application/octet-stream',
+          MIME_BY_EXT[extname(relativePath).toLowerCase()] ??
+            'application/octet-stream',
         );
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
@@ -57,7 +59,9 @@ async function bootstrap() {
     })();
   });
 
-  const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001')
+  const corsOrigins = (
+    process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3001'
+  )
     .split(',')
     .map((o) => o.trim());
 
@@ -83,4 +87,4 @@ async function bootstrap() {
   console.log(`🚀 NHGP API running at http://localhost:${port}/api/v1`);
 }
 
-bootstrap();
+void bootstrap(); // entry point — intentionally fire-and-forget

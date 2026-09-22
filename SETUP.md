@@ -70,7 +70,13 @@ SMTP_USER=your@email.com
 SMTP_PASS=your-app-password
 SMTP_FROM=Ndukego Homes <no-reply@ndukegohomes.com>
 WEB_URL=http://localhost:3000     # change to your public URL in production
+ADMIN_NOTIFICATION_EMAIL=ndukegoinvest.propertiesltd@gmail.com   # optional — this is the default
 ```
+
+> **Admin alerts:** every inquiry or reservation submitted on the public site is both stored
+> in the admin portal (Inquiries / Reservations pages) and emailed to
+> `ADMIN_NOTIFICATION_EMAIL` (default `ndukegoinvest.propertiesltd@gmail.com`).
+> Real delivery requires the SMTP variables above to be set (Gmail needs an App Password).
 
 **Recommended providers:**
 - **Resend** (resend.com) — easiest, has a free tier. Use SMTP relay at `smtp.resend.com:587`

@@ -14,7 +14,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_ACCESS_SECRET') || 'development-secret-change-me',
+      secretOrKey:
+        configService.get<string>('JWT_ACCESS_SECRET') ||
+        'development-secret-change-me',
     });
   }
 
@@ -39,9 +41,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     };
   }
 
-  private async getUserPermissions(userId: string, employeeId: string | null): Promise<string[]> {
+  private async getUserPermissions(
+    userId: string,
+    employeeId: string | null,
+  ): Promise<string[]> {
     if (!employeeId) {
-      if (await this.prisma.user.findFirst({ where: { id: userId, customerId: { not: null } } })) {
+      if (
+        await this.prisma.user.findFirst({
+          where: { id: userId, customerId: { not: null } },
+        })
+      ) {
         const customerRole = await this.prisma.role.findUnique({
           where: { code: 'CUSTOMER' },
           include: { permissions: { include: { permission: true } } },

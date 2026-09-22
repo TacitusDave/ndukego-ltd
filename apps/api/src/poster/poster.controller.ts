@@ -15,7 +15,10 @@ import { memoryStorage } from 'multer';
 import { PosterService } from './poster.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
-import { RequirePermissions, Public } from '../auth/decorators/permissions.decorator';
+import {
+  RequirePermissions,
+  Public,
+} from '../auth/decorators/permissions.decorator';
 
 @Controller('posters')
 export class PosterController {
@@ -40,7 +43,15 @@ export class PosterController {
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   create(
     @UploadedFile() file: Express.Multer.File,
-    @Body() body: { title?: string; description?: string; linkUrl?: string },
+    @Body()
+    body: {
+      title?: string;
+      description?: string;
+      linkUrl?: string;
+      groupName?: string;
+      width?: string;
+      height?: string;
+    },
   ) {
     return this.posterService.create(body, file);
   }
@@ -52,7 +63,15 @@ export class PosterController {
   update(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File | undefined,
-    @Body() body: { title?: string; description?: string; linkUrl?: string },
+    @Body()
+    body: {
+      title?: string;
+      description?: string;
+      linkUrl?: string;
+      groupName?: string;
+      width?: string;
+      height?: string;
+    },
   ) {
     return this.posterService.update(id, body, file);
   }

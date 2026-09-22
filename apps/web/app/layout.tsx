@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Fraunces, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { ConditionalFooter } from "@/components/conditional-footer";
+import { RouteScrollReset, ScrollToTopButton } from "@/components/scroll-to-top";
 import { CookieBanner } from "@/components/cookie-banner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -28,7 +31,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 
         <Navbar />
         <main className="flex-1 pt-16">{children}</main>
-        <Footer />
+        <ConditionalFooter>
+          <Footer />
+        </ConditionalFooter>
+        <Suspense fallback={null}>
+          <RouteScrollReset />
+        </Suspense>
+        <ScrollToTopButton />
         <CookieBanner />
         <SpeedInsights />
       </body>

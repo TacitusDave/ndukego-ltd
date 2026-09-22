@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, Building2, DollarSign, TrendingUp, Users, Phone, CheckCircle, MapPin } from "lucide-react";
+import { ArrowRight, Building2, DollarSign, TrendingUp, Users, Phone, CheckCircle } from "lucide-react";
 import { publicFetch } from "@/lib/api";
-import { PropertyCard, type PropertyCardData } from "@/components/property-card";
+import type { PropertyCardData } from "@/components/property-card";
 import { HomeHero } from "@/components/home-hero";
 import { HomeProcess } from "@/components/home-process";
 import { AnimateIn } from "@/components/animate-in";
+import { HomeFeatured } from "@/components/home-featured";
 
 interface PropertiesResponse {
   items: PropertyCardData[];
@@ -78,7 +79,7 @@ const SERVICES = [
 
 export default async function HomePage() {
   const [featuredPropRes, allRes, featuredEstateRes] = await Promise.all([
-    publicFetch<PropertiesResponse>("/properties/public?featured=true&limit=6"),
+    publicFetch<PropertiesResponse>("/properties/public?featured=true&limit=4"),
     publicFetch<PropertiesResponse>("/properties/public?limit=1"),
     publicFetch<EstatesResponse>("/estates/public?featured=true&limit=4"),
   ]);
@@ -141,126 +142,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Featured Properties ───────────────────── */}
-      <section className="relative py-24">
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <AnimateIn>
-            <div className="flex items-end justify-between mb-14">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-[#A0111C] mb-3">
-                  Real Estate
-                </p>
-                <h2
-                  className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  {featuredProperties.length > 0 ? "Featured listings" : "Available properties"}
-                </h2>
-              </div>
-              <Link
-                href="/properties"
-                className="flex items-center gap-1.5 text-sm font-semibold text-[#A0111C] hover:text-[#B41523] transition-colors"
-              >
-                View all <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </AnimateIn>
-
-          {featuredProperties.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredProperties.map((p, i) => (
-                <AnimateIn key={p.id} delay={i * 0.07}>
-                  <PropertyCard property={p} />
-                </AnimateIn>
-              ))}
-            </div>
-          ) : (
-            <AnimateIn delay={0.1}>
-              <div className="rounded-2xl border border-gray-100 bg-white/70 p-16 text-center shadow-sm">
-                <Building2 className="h-10 w-10 mx-auto text-gray-300 mb-4" />
-                <p className="font-semibold text-gray-600">Listings coming soon</p>
-                <p className="text-sm text-gray-400 mt-2">
-                  We&apos;re adding new verified properties. Check back shortly.
-                </p>
-              </div>
-            </AnimateIn>
-          )}
-        </div>
-      </section>
-
-      {/* ── Featured Estates ──────────────────────── */}
-      {featuredEstates.length > 0 && (
-        <section className="relative py-24 bg-white/40">
-          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <AnimateIn>
-              <div className="flex items-end justify-between mb-14">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-[#A0111C] mb-3">
-                    Our Estates
-                  </p>
-                  <h2
-                    className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight"
-                    style={{ fontFamily: "var(--font-display)" }}
-                  >
-                    Planned communities to call home
-                  </h2>
-                </div>
-                <Link
-                  href="/estates"
-                  className="flex items-center gap-1.5 text-sm font-semibold text-[#A0111C] hover:text-[#B41523] transition-colors"
-                >
-                  View all <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </AnimateIn>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {featuredEstates.map((e, i) => (
-                <AnimateIn key={e.id} delay={i * 0.1}>
-                  <div className="group rounded-2xl border border-gray-100 bg-white/80 shadow-sm hover:shadow-lg hover:border-[#A0111C]/20 transition-all duration-300 overflow-hidden">
-                    <div className="p-6 flex flex-col">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-3">
-                        <MapPin className="h-3 w-3 text-[#A0111C] shrink-0" />
-                        {e.city ? `${e.city}, ` : ""}{e.state}
-                      </div>
-                      <h3
-                        className="font-bold text-gray-900 text-lg mb-2 group-hover:text-[#A0111C] transition-colors leading-snug"
-                        style={{ fontFamily: "var(--font-display)" }}
-                      >
-                        {e.name}
-                      </h3>
-                      {e.shortDescription && (
-                        <p className="text-sm text-gray-500 leading-relaxed line-clamp-3 mb-4">
-                          {e.shortDescription}
-                        </p>
-                      )}
-                      {e.totalPlots && (
-                        <div className="flex items-center gap-4 text-xs text-gray-400 mb-5">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="font-bold text-gray-800 text-base">{e.availablePlots ?? "—"}</span>
-                            <span>plots available</span>
-                          </div>
-                          <div className="w-px h-8 bg-gray-100" />
-                          <div className="flex flex-col gap-0.5">
-                            <span className="font-bold text-gray-800 text-base">{e.totalPlots}</span>
-                            <span>total plots</span>
-                          </div>
-                        </div>
-                      )}
-                      <Link
-                        href={`/estates/${e.id}`}
-                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#A0111C] hover:text-[#B41523] transition-colors mt-auto"
-                      >
-                        Explore estate <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </div>
-                  </div>
-                </AnimateIn>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+      {/* ── Featured: Properties (left) & Estates (right) ── */}
+      <HomeFeatured properties={featuredProperties} estates={featuredEstates} />
 
       {/* ── Process ── */}
       <HomeProcess />

@@ -101,7 +101,8 @@ export default function SettingsPage() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  // Deferred so the initial load's setState never runs synchronously in the effect.
+  useEffect(() => { void Promise.resolve().then(() => loadData()); }, [loadData]);
 
   function flash(type: "success"|"error", message: string) {
     setFeedback({ type, message });

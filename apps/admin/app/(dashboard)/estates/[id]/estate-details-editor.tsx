@@ -109,7 +109,7 @@ export function EstateDetailsEditor({ estateId, initialAmenities, initialMapUrl,
       <div>
         <h3 className="text-sm font-semibold">Location Map &amp; Amenities</h3>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Set the Google Maps URL and toggle what's available at this estate.
+          Set the Google Maps URL and toggle what&apos;s available at this estate.
         </p>
       </div>
 

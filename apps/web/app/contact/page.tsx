@@ -38,14 +38,6 @@ const CONTACT_DETAILS = [
       },
     ],
   },
-  {
-    icon: Clock,
-    label: "Business hours",
-    items: [
-      { text: "Monday – Friday: 8 am – 6 pm", href: null },
-      { text: "Saturday: 9 am – 3 pm", href: null },
-    ],
-  },
 ];
 
 const MAP_EMBED =
@@ -78,7 +70,7 @@ export default async function ContactPage({
               Let&apos;s talk.
             </h1>
             <p className="text-lg text-gray-500 max-w-xl leading-relaxed">
-              Whether you&apos;re buying, investing, or just exploring — our team
+              Whether you&apos;re buying, investing, or just exploring, our team
               is ready to help you make the right move.
             </p>
           </AnimateIn>

@@ -1,6 +1,6 @@
 # NHGP — Build Progress & Master Todo List
 
-_Updated: 2026-08-28 | Session 25_
+_Updated: 2026-09-21 | Session 26_
 
 > This file is the single source of truth for what's done, what's in progress, and what
 > remains until 100% production-ready. Read it at the start of every session.
@@ -279,6 +279,7 @@ Build after Phase 3 demonstrates ROI.
 - [x] `NEXT_PUBLIC_API_URL` — set in Vercel (both web + admin)
 - [ ] `SUPER_ADMIN_PASSWORD` — change from seed default `ChangeMeNow123!`
 - [ ] `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` — not yet set
+- [ ] `ADMIN_NOTIFICATION_EMAIL` — optional; defaults to ndukegoinvest.propertiesltd@gmail.com (session 26 inquiry/reservation admin alerts)
 - [ ] `WEB_URL` — set to https://ndukegoltd.com in Railway
 - [ ] `NEXT_PUBLIC_API_BASE` — confirm set to Railway API URL in Vercel
 
@@ -382,4 +383,5 @@ Build after Phase 3 demonstrates ROI.
 | 22 | 2026-08-14 | Inquiry → Reservation one-click pipeline — "Reserve" button on inquiry row, API converts inquiry to PENDING reservation (auto-creates customer if new), returns reservation number + link |
 | 23 | 2026-08-14 | Fix inquiry form 500 error — replaced raw SQL INSERT with prisma.inquiry.create() to fix column name mismatch for unmapped camelCase Prisma fields |
 | 24 | 2026-08-14 | Fix inspection routes 404 on Railway — Turbo cache was serving stale NestJS dist without inspection module despite code being correct; changed railway.toml buildCommand to bypass Turbo entirely (explicit per-package pnpm builds ensure fresh nest build every deploy) |
+| 26 | 2026-09-21 | UX batch: floating back-to-top button + scroll-to-top on every navigation (RouteScrollReset); navbar redesigned (pill brand, desktop quick actions, call icon replaces calendar icon, full-screen scrollable menu sheet — fixes hidden content on short screens); red "Ready to build your wealth?" footer CTA band removed (footer-cta-band.tsx deleted); Real Estate service page now embeds featured properties + featured estates sections with live API data; all website inquiries now also email ndukegoinvest.propertiesltd@gmail.com (new sendNewInquiryAdminNotification + sendNewReservationAdminNotification, ADMIN_NOTIFICATION_EMAIL env override, non-blocking) in addition to the admin Inquiries page; client dashboard redesigned (greeting header with initials avatar, sticky glass sidebar with active states, stat tiles, quick actions, refined reservations/favorites/profile pages, working Remove button on saved properties); footer hidden on /login and /register (ConditionalFooter gate) |
 | 25 | 2026-08-28 | Fix site plan manager image upload + save-then-logout bugs — root cause was 15min access_token cookie maxAge matching JWT expiry; extended cookie lifetime to 7 days, added 401-refresh-retry to all server actions (authPost/authPatch/authDelete) and the proxy route (including multipart/form-data retry); fixed handleImageUpload try/finally so button always re-enables; RBAC sidebar filtering + employee/customer page action guards built (permissions context, canSeeSection, isSuperAdminOrExecutive); Removed hardcoded PROTOTYPES from estate site plan; RBAC extended to all remaining admin pages: property create/status/delete, estate create, reservation confirm/cancel/convert-to-sale, inspection schedule/start/complete/fail/cancel, sale status/payment-record/payment-verify |

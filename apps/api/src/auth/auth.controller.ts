@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/permissions.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -84,7 +92,8 @@ export class AuthController {
   @Public()
   @Post('customer/register')
   registerCustomer(
-    @Body() body: {
+    @Body()
+    body: {
       email: string;
       password: string;
       firstName: string;
@@ -93,7 +102,7 @@ export class AuthController {
     },
     @Req() req: Request,
   ) {
-    return this.authService.registerCustomer(body, (req as any).ip);
+    return this.authService.registerCustomer(body, req.ip ?? undefined);
   }
 
   @Public()
@@ -105,8 +114,8 @@ export class AuthController {
     return this.authService.login(
       body.email.toLowerCase(),
       body.password,
-      (req as any).ip,
-      (req as any).headers?.['user-agent'],
+      req.ip ?? undefined,
+      req.get('user-agent') ?? undefined,
     );
   }
 
@@ -123,7 +132,14 @@ export class AuthController {
   @Patch('customer/profile')
   updateCustomerProfile(
     @CurrentUser() user: AuthenticatedUser,
-    @Body() body: { firstName?: string; lastName?: string; phone?: string; city?: string; state?: string },
+    @Body()
+    body: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      city?: string;
+      state?: string;
+    },
   ) {
     if (!user.customerId) {
       return { success: false, message: 'Not a customer account' };

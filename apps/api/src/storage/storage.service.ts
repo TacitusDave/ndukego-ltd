@@ -33,7 +33,8 @@ export class StorageService {
     private readonly prisma: PrismaService,
   ) {
     this.provider = this.config.get('STORAGE_PROVIDER') || 'local';
-    this.basePath = this.config.get('STORAGE_LOCAL_PATH') || './storage/uploads';
+    this.basePath =
+      this.config.get('STORAGE_LOCAL_PATH') || './storage/uploads';
   }
 
   async store(relativePath: string, buffer: Buffer): Promise<StoredFile> {
@@ -43,14 +44,21 @@ export class StorageService {
     const bytes = new Uint8Array(buffer);
     await this.prisma.uploadFile.upsert({
       where: { path: relativePath },
-      create: { path: relativePath, data: bytes, mimeType: 'application/octet-stream', size: buffer.length },
+      create: {
+        path: relativePath,
+        data: bytes,
+        mimeType: 'application/octet-stream',
+        size: buffer.length,
+      },
       update: { data: bytes, size: buffer.length },
     });
 
     // Best-effort mirror to disk (handy for local dev tooling; harmless in prod).
     if (this.provider === 'local') {
-      await this.storeLocal(relativePath, buffer).catch((err) =>
-        this.logger.warn(`Disk mirror failed for ${relativePath}: ${err?.message ?? err}`),
+      await this.storeLocal(relativePath, buffer).catch((err: unknown) =>
+        this.logger.warn(
+          `Disk mirror failed for ${relativePath}: ${err instanceof Error ? err.message : String(err)}`,
+        ),
       );
     }
 
@@ -61,15 +69,21 @@ export class StorageService {
     // 1) Database (authoritative, survives redeploys)
     const row = await this.prisma.uploadFile
       .findUnique({ where: { path: storagePath } })
-      .catch((err) => {
-        this.logger.error(`DB read failed for ${storagePath}: ${err?.message ?? err}`);
+      .catch((err: unknown) => {
+        this.logger.error(
+          `DB read failed for ${storagePath}: ${err instanceof Error ? err.message : String(err)}`,
+        );
         return null;
       });
     if (row) return Buffer.from(row.data);
 
     // 2) Local disk (legacy files uploaded before DB storage)
     if (this.provider === 'local') {
-      const legacyDirs = [this.basePath, './storage/documents'];
+      const legacyDirs = [
+        this.basePath,
+        './storage/uploads',
+        './storage/documents',
+      ];
       for (const dir of legacyDirs) {
         try {
           return await readFile(join(dir, storagePath));
@@ -106,7 +120,10 @@ export class StorageService {
     }
   }
 
-  private async storeLocal(relativePath: string, buffer: Buffer): Promise<StoredFile> {
+  private async storeLocal(
+    relativePath: string,
+    buffer: Buffer,
+  ): Promise<StoredFile> {
     const fullPath = join(this.basePath, relativePath);
     await mkdir(dirname(fullPath), { recursive: true });
     await writeFile(fullPath, buffer);

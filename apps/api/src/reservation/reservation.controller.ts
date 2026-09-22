@@ -84,6 +84,11 @@ export class ReservationController {
     @Body() body: { status: string; notes?: string },
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.reservationService.updateStatus(id, body.status, body.notes, user.id);
+    return this.reservationService.updateStatus(
+      id,
+      body.status,
+      body.notes,
+      user.id,
+    );
   }
 }

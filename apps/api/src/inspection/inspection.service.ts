@@ -35,11 +35,11 @@ export interface CompleteInspectionDto {
 }
 
 const VALID_TRANSITIONS: Record<string, InspectionStatus[]> = {
-  SCHEDULED:   ['IN_PROGRESS', 'CANCELLED'],
+  SCHEDULED: ['IN_PROGRESS', 'CANCELLED'],
   IN_PROGRESS: ['COMPLETED', 'FAILED', 'CANCELLED'],
-  COMPLETED:   [],
-  FAILED:      [],
-  CANCELLED:   [],
+  COMPLETED: [],
+  FAILED: [],
+  CANCELLED: [],
 };
 
 @Injectable()
@@ -49,7 +49,11 @@ export class InspectionService {
     private readonly auditService: AuditService,
   ) {}
 
-  async schedule(dto: ScheduleInspectionDto, actorId: string, actorEmail: string) {
+  async schedule(
+    dto: ScheduleInspectionDto,
+    actorId: string,
+    actorEmail: string,
+  ) {
     const inspectionNumber = generateReference('INSP');
 
     const inspection = await this.prisma.inspection.create({
@@ -64,9 +68,15 @@ export class InspectionService {
         status: 'SCHEDULED',
       },
       include: {
-        property: { select: { id: true, title: true, state: true, city: true } },
-        customer: { select: { id: true, firstName: true, lastName: true, email: true } },
-        inspector: { select: { id: true, firstName: true, lastName: true, jobTitle: true } },
+        property: {
+          select: { id: true, title: true, state: true, city: true },
+        },
+        customer: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+        inspector: {
+          select: { id: true, firstName: true, lastName: true, jobTitle: true },
+        },
       },
     });
 
@@ -77,7 +87,12 @@ export class InspectionService {
       entityType: 'INSPECTION',
       entityId: inspection.id,
       entityLabel: inspectionNumber,
-      newValues: { inspectionNumber, type: dto.type, propertyId: dto.propertyId, scheduledAt: dto.scheduledAt },
+      newValues: {
+        inspectionNumber,
+        type: dto.type,
+        propertyId: dto.propertyId,
+        scheduledAt: dto.scheduledAt,
+      },
     });
 
     return inspection;
@@ -101,14 +116,33 @@ export class InspectionService {
       ...(query.type ? { type: query.type as InspectionType } : {}),
       ...(query.inspectorId ? { inspectorId: query.inspectorId } : {}),
       ...(query.propertyId ? { propertyId: query.propertyId } : {}),
-      ...(query.search ? {
-        OR: [
-          { inspectionNumber: { contains: query.search, mode: 'insensitive' } },
-          { property: { title: { contains: query.search, mode: 'insensitive' } } },
-          { inspector: { firstName: { contains: query.search, mode: 'insensitive' } } },
-          { inspector: { lastName: { contains: query.search, mode: 'insensitive' } } },
-        ],
-      } : {}),
+      ...(query.search
+        ? {
+            OR: [
+              {
+                inspectionNumber: {
+                  contains: query.search,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                property: {
+                  title: { contains: query.search, mode: 'insensitive' },
+                },
+              },
+              {
+                inspector: {
+                  firstName: { contains: query.search, mode: 'insensitive' },
+                },
+              },
+              {
+                inspector: {
+                  lastName: { contains: query.search, mode: 'insensitive' },
+                },
+              },
+            ],
+          }
+        : {}),
     };
 
     const [items, total] = await Promise.all([
@@ -118,9 +152,18 @@ export class InspectionService {
         take: limit,
         orderBy: { scheduledAt: 'desc' },
         include: {
-          property: { select: { id: true, title: true, state: true, city: true } },
+          property: {
+            select: { id: true, title: true, state: true, city: true },
+          },
           customer: { select: { id: true, firstName: true, lastName: true } },
-          inspector: { select: { id: true, firstName: true, lastName: true, jobTitle: true } },
+          inspector: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              jobTitle: true,
+            },
+          },
         },
       }),
       this.prisma.inspection.count({ where }),
@@ -134,9 +177,33 @@ export class InspectionService {
     const inspection = await this.prisma.inspection.findUnique({
       where: { id },
       include: {
-        property: { select: { id: true, title: true, state: true, city: true, category: true } },
-        customer: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
-        inspector: { select: { id: true, firstName: true, lastName: true, jobTitle: true, email: true } },
+        property: {
+          select: {
+            id: true,
+            title: true,
+            state: true,
+            city: true,
+            category: true,
+          },
+        },
+        customer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+        inspector: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            jobTitle: true,
+            email: true,
+          },
+        },
       },
     });
     if (!inspection) throw new NotFoundException('Inspection not found');
@@ -146,7 +213,9 @@ export class InspectionService {
   async start(id: string, actorId: string, actorEmail: string) {
     const inspection = await this.findOne(id);
     if (!VALID_TRANSITIONS[inspection.status]?.includes('IN_PROGRESS')) {
-      throw new BadRequestException(`Cannot start an inspection with status ${inspection.status}`);
+      throw new BadRequestException(
+        `Cannot start an inspection with status ${inspection.status}`,
+      );
     }
 
     const updated = await this.prisma.inspection.update({
@@ -155,18 +224,30 @@ export class InspectionService {
     });
 
     await this.auditService.log({
-      actorId, actorEmail, action: 'STATUS_CHANGE', entityType: 'INSPECTION', entityId: id,
+      actorId,
+      actorEmail,
+      action: 'STATUS_CHANGE',
+      entityType: 'INSPECTION',
+      entityId: id,
       entityLabel: inspection.inspectionNumber,
-      oldValues: { status: inspection.status }, newValues: { status: 'IN_PROGRESS' },
+      oldValues: { status: inspection.status },
+      newValues: { status: 'IN_PROGRESS' },
     });
 
     return updated;
   }
 
-  async complete(id: string, dto: CompleteInspectionDto, actorId: string, actorEmail: string) {
+  async complete(
+    id: string,
+    dto: CompleteInspectionDto,
+    actorId: string,
+    actorEmail: string,
+  ) {
     const inspection = await this.findOne(id);
     if (!VALID_TRANSITIONS[inspection.status]?.includes('COMPLETED')) {
-      throw new BadRequestException(`Cannot complete an inspection with status ${inspection.status}`);
+      throw new BadRequestException(
+        `Cannot complete an inspection with status ${inspection.status}`,
+      );
     }
 
     const updated = await this.prisma.inspection.update({
@@ -175,7 +256,10 @@ export class InspectionService {
         status: 'COMPLETED',
         completedAt: new Date(),
         recommendation: dto.recommendation,
-        overallScore: dto.overallScore != null ? new Prisma.Decimal(dto.overallScore) : undefined,
+        overallScore:
+          dto.overallScore != null
+            ? new Prisma.Decimal(dto.overallScore)
+            : undefined,
         summary: dto.summary,
         observations: dto.observations as never,
         defects: dto.defects as never,
@@ -185,7 +269,11 @@ export class InspectionService {
     });
 
     await this.auditService.log({
-      actorId, actorEmail, action: 'STATUS_CHANGE', entityType: 'INSPECTION', entityId: id,
+      actorId,
+      actorEmail,
+      action: 'STATUS_CHANGE',
+      entityType: 'INSPECTION',
+      entityId: id,
       entityLabel: inspection.inspectionNumber,
       oldValues: { status: inspection.status },
       newValues: { status: 'COMPLETED', recommendation: dto.recommendation },
@@ -194,10 +282,17 @@ export class InspectionService {
     return updated;
   }
 
-  async cancel(id: string, reason: string, actorId: string, actorEmail: string) {
+  async cancel(
+    id: string,
+    reason: string,
+    actorId: string,
+    actorEmail: string,
+  ) {
     const inspection = await this.findOne(id);
     if (!VALID_TRANSITIONS[inspection.status]?.includes('CANCELLED')) {
-      throw new BadRequestException(`Cannot cancel an inspection with status ${inspection.status}`);
+      throw new BadRequestException(
+        `Cannot cancel an inspection with status ${inspection.status}`,
+      );
     }
 
     const updated = await this.prisma.inspection.update({
@@ -206,9 +301,14 @@ export class InspectionService {
     });
 
     await this.auditService.log({
-      actorId, actorEmail, action: 'STATUS_CHANGE', entityType: 'INSPECTION', entityId: id,
+      actorId,
+      actorEmail,
+      action: 'STATUS_CHANGE',
+      entityType: 'INSPECTION',
+      entityId: id,
       entityLabel: inspection.inspectionNumber,
-      oldValues: { status: inspection.status }, newValues: { status: 'CANCELLED', reason },
+      oldValues: { status: inspection.status },
+      newValues: { status: 'CANCELLED', reason },
     });
 
     return updated;
@@ -217,7 +317,9 @@ export class InspectionService {
   async fail(id: string, reason: string, actorId: string, actorEmail: string) {
     const inspection = await this.findOne(id);
     if (!VALID_TRANSITIONS[inspection.status]?.includes('FAILED')) {
-      throw new BadRequestException(`Cannot fail an inspection with status ${inspection.status}`);
+      throw new BadRequestException(
+        `Cannot fail an inspection with status ${inspection.status}`,
+      );
     }
 
     const updated = await this.prisma.inspection.update({
@@ -226,9 +328,14 @@ export class InspectionService {
     });
 
     await this.auditService.log({
-      actorId, actorEmail, action: 'STATUS_CHANGE', entityType: 'INSPECTION', entityId: id,
+      actorId,
+      actorEmail,
+      action: 'STATUS_CHANGE',
+      entityType: 'INSPECTION',
+      entityId: id,
       entityLabel: inspection.inspectionNumber,
-      oldValues: { status: inspection.status }, newValues: { status: 'FAILED', reason },
+      oldValues: { status: inspection.status },
+      newValues: { status: 'FAILED', reason },
     });
 
     return updated;

@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SlidersHorizontal, LayoutGrid, Map, ChevronRight, MapPin, Bed, Bath, Maximize2, Building2 } from "lucide-react";
+import { SlidersHorizontal, LayoutGrid, Map, ChevronRight, Building2 } from "lucide-react";
 import { publicFetch } from "@/lib/api";
 import { PropertyCard, type PropertyCardData } from "@/components/property-card";
 import type { MapProperty } from "@/components/properties-map-client";
 import { PropertiesMapSection } from "@/components/properties-map-section";
+import { PropertiesViewTransition } from "@/components/properties-view-transition";
+import { PropertiesViewPill } from "@/components/properties-view-pill";
 import { AnimateIn } from "@/components/animate-in";
+import { HeroFlora } from "@/components/hero-flora";
 
 export const metadata: Metadata = {
   title: "Properties",
@@ -109,133 +112,205 @@ export default async function PropertiesPage({ searchParams }: PageProps) {
 
   const filterBase = { search, type, category, state, estateId };
 
+  const selectClass =
+    "peer h-11 w-full appearance-none rounded-lg border border-gray-200 bg-white pl-3.5 pr-9 text-sm text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#A0111C]/25 focus:border-[#A0111C]";
+
   return (
     <>
-      {/* Page header - elegant dark header */}
-      <section className="relative py-16 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#A0111C]/5 to-transparent" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMwMDAiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIvPjwvZz48L2c+PC9zdmc+')] opacity-50" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
+      {/* ── Hero — split-screen: text left, house bleeding into the cream
+          background and reaching the right screen edge (no frame) ── */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#f6f1e7] via-[#f4ecdf] to-[#efe6d4]">
+        <HeroFlora />
+
+        {/* Full-height house image, right half, blended left edge (desktop) */}
+        <div
+          aria-hidden
+          className="pointer-events-none hidden lg:block absolute inset-y-0 right-0 w-[52%]"
+        >
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: "url(/properties-hero-house.png)",
+              maskImage: "linear-gradient(to right, transparent 0%, black 32%)",
+              WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 32%)",
+              filter: "saturate(1.04)",
+            }}
+          />
+          {/* Warm wash so the photo melts into the cream band */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to right, #f4ecdf 0%, rgba(244,236,223,0.25) 30%, rgba(244,236,223,0) 55%), linear-gradient(to top, rgba(239,230,212,0.5) 0%, rgba(239,230,212,0) 35%)",
+            }}
+          />
+        </div>
+
+        {/* Mobile/tablet image — below the text, soft-blended, no frame */}
+        <div className="relative lg:hidden px-4 sm:px-6 pb-2">
+          <div
+            aria-hidden
+            className="absolute inset-x-4 -top-10 h-24 bg-gradient-to-b from-[#f6f1e7] to-transparent z-10 pointer-events-none"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/properties-hero-house.png"
+            alt="Modern luxury home at sunset with palm trees and landscaped garden"
+            className="w-full h-56 sm:h-72 object-cover rounded-[1.75rem]"
+            style={{
+              maskImage: "linear-gradient(to bottom, transparent 0%, black 14%)",
+              WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 14%)",
+            }}
+          />
+        </div>
+
+        <div className="relative">
+          <div className="w-full lg:w-[48%] px-4 pb-4 pt-10 sm:px-6 sm:pt-12 lg:py-14 lg:pl-[max(2rem,calc((100vw-80rem)/2+2rem))] lg:pr-10">
+            {/* Text — unchanged copy */}
             <h1
-              className="text-4xl sm:text-5xl font-bold text-gray-900 mb-3"
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-3"
               style={{ fontFamily: "var(--font-display)" }}
             >
               Ndukego Homes
             </h1>
-            <p className="text-sm text-gray-400 mb-6">
+            <p className="text-sm text-gray-400 mb-5">
               Powered By: <span className="font-semibold text-gray-600">Ndukego Investment &amp; Properties Ltd</span>
             </p>
-            <p className="text-lg text-gray-500 leading-relaxed">
+            <span className="inline-block h-1 w-25 bg-[#A0111C] mb-5" />
+            <p className="text-lg text-gray-500 leading-relaxed max-w-lg">
               Curated selection of residential, commercial, and investment properties
               across Nigeria. Each listing verified for quality and authenticity.
             </p>
           </div>
         </div>
+
+        {/* Vertical side note — far right, over the image (desktop) */}
+        <div className="pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 xl:flex flex-col items-center gap-3">
+          <span className="h-10 w-px bg-gray-500/40" />
+          <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-gray-600 [writing-mode:vertical-rl]">
+            Better Homes &middot; Bigger Futures
+          </span>
+          <span className="h-10 w-px bg-gray-500/40" />
+        </div>
       </section>
 
-      {/* Filters + View toggle - refined styling */}
-      <section className="sticky top-16 z-40 border-b border-gray-200/60 bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <form className="flex flex-wrap gap-3 items-center">
-            <div className="flex items-center gap-2 text-sm text-gray-500 shrink-0">
-              <SlidersHorizontal className="h-4 w-4 text-[#A0111C]" />
-              <span className="font-medium">Filter</span>
+      {/* ── Filter ribbon — floating rounded card, sticky under navbar.
+          Grid stack on phone/tablet, single row on desktop. ── */}
+      <section className="sticky top-16 z-40 py-3 px-4 sm:px-6 lg:px-8 -mt-1">
+        <div className="mx-auto max-w-7xl">
+          <form className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[auto_minmax(160px,1fr)_auto_auto_auto_auto_auto] lg:items-center rounded-xl border border-gray-200/80 bg-white/90 p-3.5 shadow-[0_18px_40px_-24px_rgba(16,24,40,0.35)] backdrop-blur-md">
+            <div className="hidden lg:flex items-center gap-2 pl-1 pr-1 text-sm text-gray-700 shrink-0">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#A0111C]/[0.08]">
+                <SlidersHorizontal className="h-4 w-4 text-[#A0111C]" />
+              </span>
+              <span className="font-semibold">Filters</span>
             </div>
 
-            <input
-              name="search"
-              type="text"
-              defaultValue={search}
-              placeholder="Search by location, title..."
-              className="h-10 flex-1 min-w-[200px] max-w-[300px] border border-gray-200 bg-white px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#A0111C]/20 focus:border-[#A0111C] transition-all"
-            />
+            {/* Search */}
+            <label className="relative w-full sm:col-span-2 lg:col-span-1">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+              </svg>
+              <input
+                name="search"
+                type="text"
+                defaultValue={search}
+                placeholder="Search by location, title, or property ID..."
+                className="h-11 w-full rounded-lg border border-gray-200 bg-white pl-10 pr-3.5 text-sm shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#A0111C]/25 focus:border-[#A0111C] transition-all"
+              />
+            </label>
 
-            <select
-              name="type"
-              defaultValue={type}
-              className="h-10 border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#A0111C]/20 focus:border-[#A0111C] transition-all"
-            >
-              {PROPERTY_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </select>
+            {/* Property Type */}
+            <label className="relative block w-full">
+              <span className="pointer-events-none absolute -top-2 left-3 z-10 rounded bg-white px-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                Property Type
+              </span>
+              <select name="type" defaultValue={type} className={selectClass}>
+                {PROPERTY_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+              <ChevronRight className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 rotate-90 -translate-y-1/2 text-gray-400" />
+            </label>
 
-            <select
-              name="category"
-              defaultValue={category}
-              className="h-10 border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#A0111C]/20 focus:border-[#A0111C] transition-all"
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
+            {/* Category */}
+            <label className="relative block w-full">
+              <span className="pointer-events-none absolute -top-2 left-3 z-10 rounded bg-white px-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                Category
+              </span>
+              <select name="category" defaultValue={category} className={selectClass}>
+                {CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+              <ChevronRight className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 rotate-90 -translate-y-1/2 text-gray-400" />
+            </label>
 
-            <select
-              name="state"
-              defaultValue={state}
-              className="h-10 border border-gray-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#A0111C]/20 focus:border-[#A0111C] transition-all"
-            >
-              <option value="">All states</option>
-              {NIGERIAN_STATES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+            {/* Location */}
+            <label className="relative block w-full">
+              <span className="pointer-events-none absolute -top-2 left-3 z-10 rounded bg-white px-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                Location
+              </span>
+              <select name="state" defaultValue={state} className={selectClass}>
+                <option value="">All states</option>
+                {NIGERIAN_STATES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              <ChevronRight className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 rotate-90 -translate-y-1/2 text-gray-400" />
+            </label>
 
             {/* Keep view param when submitting filters */}
             {isMapView && <input type="hidden" name="view" value="map" />}
 
-            <button
-              type="submit"
-              className="h-10 rounded bg-[#A0111C] px-5 text-sm font-semibold text-white hover:bg-[#B41523] transition-colors shadow-sm"
-            >
-              Apply Filters
-            </button>
-
-            {(search || type || category || state) && (
-              <Link
-                href={`/properties${isMapView ? "?view=map" : ""}`}
-                className="h-10 flex items-center rounded px-4 text-sm text-gray-500 hover:text-[#A0111C] hover:border-[#A0111C] border border-transparent transition-all"
+            {/* Apply + Clear — own full-width row on phone/tablet */}
+            <div className="flex items-center gap-2 sm:col-span-2 lg:col-span-1 lg:col-start-6">
+              <button
+                type="submit"
+                className="h-11 flex-1 lg:flex-none rounded-lg bg-[#A0111C] px-5 text-sm font-semibold text-white hover:bg-[#B41523] transition-colors shadow-sm shadow-[#A0111C]/25"
               >
-                Clear
-              </Link>
-            )}
+                Apply Filters
+              </button>
 
-            {/* View toggle */}
-            <div className="ml-auto flex items-center gap-1 rounded border border-gray-200 bg-white p-0.5 shadow-sm">
-              <Link
-                href={`/properties?${buildQueryString(filterBase, { view: "list", page: "1" })}`}
-                className={`flex items-center gap-1.5 rounded px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                  !isMapView
-                    ? "bg-[#A0111C] text-white shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
+              {(search || type || category || state) && (
+                <Link
+                  href={`/properties${isMapView ? "?view=map" : ""}`}
+                  className="h-11 flex items-center justify-center rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-500 hover:text-[#A0111C] hover:border-[#A0111C]/40 transition-colors"
+                >
+                  Clear
+                </Link>
+              )}
+            </div>
+
+            {/* View toggle — full-width row on phone/tablet, right-aligned on desktop.
+                layoutId makes the red selection pill glide between List and Map. */}
+            <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-sm sm:col-span-2 lg:col-span-1 lg:col-start-7 lg:justify-self-end">
+              <PropertiesViewPill active={!isMapView} href={`/properties?${buildQueryString(filterBase, { view: "list", page: "1" })}`}>
                 <LayoutGrid className="h-3.5 w-3.5" />
                 List
-              </Link>
-              <Link
-                href={`/properties?${buildQueryString(filterBase, { view: "map" })}`}
-                className={`flex items-center gap-1.5 rounded px-3.5 py-1.5 text-xs font-medium transition-colors ${
-                  isMapView
-                    ? "bg-[#A0111C] text-white shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
+              </PropertiesViewPill>
+              <PropertiesViewPill active={isMapView} href={`/properties?${buildQueryString(filterBase, { view: "map" })}`}>
                 <Map className="h-3.5 w-3.5" />
                 Map
-              </Link>
+              </PropertiesViewPill>
             </div>
           </form>
         </div>
       </section>
 
-      {/* MAP VIEW */}
-      {isMapView && <PropertiesMapSection mapPins={mapPins} error={error} />}
-
-      {/* LIST VIEW - Elegant card design */}
-      {!isMapView && (
-        <section className="py-12">
+      {/* List ⇄ Map — crossfaded handoff during navigation */}
+      <PropertiesViewTransition
+        view={isMapView ? "map" : "list"}
+        map={<PropertiesMapSection mapPins={mapPins} error={error} />}
+        list={
+          <section className="py-10">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {error && (
               <div className="rounded-xl bg-red-50 border border-red-100 p-4 text-sm text-red-600 mb-8 flex items-center gap-3">
@@ -253,7 +328,7 @@ export default async function PropertiesPage({ searchParams }: PageProps) {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No properties found</h3>
                 <p className="text-gray-500 max-w-md mx-auto mb-6">
-                  Try adjusting your search or filters to find what you're looking for.
+                  Try adjusting your search or filters to find what you&apos;re looking for.
                 </p>
                 <Link
                   href="/properties"
@@ -327,7 +402,8 @@ export default async function PropertiesPage({ searchParams }: PageProps) {
             )}
           </div>
         </section>
-      )}
+        }
+      />
     </>
   );
 }

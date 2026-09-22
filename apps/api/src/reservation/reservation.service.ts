@@ -44,15 +44,25 @@ export class ReservationService {
 
     const property = await this.prisma.property.findUnique({
       where: { id: data.propertyId, deletedAt: null },
-      select: { id: true, title: true, status: true, reservationAmount: true, listingPrice: true },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        reservationAmount: true,
+        listingPrice: true,
+      },
     });
     if (!property) throw new NotFoundException('Property not found');
     if (property.status !== 'PUBLISHED') {
-      throw new BadRequestException('This property is not currently available for reservation');
+      throw new BadRequestException(
+        'This property is not currently available for reservation',
+      );
     }
 
     // Check for existing pending reservation on this property by same email
-    const existing = await this.prisma.customer.findFirst({ where: { email: data.email.toLowerCase() } });
+    const existing = await this.prisma.customer.findFirst({
+      where: { email: data.email.toLowerCase() },
+    });
     if (existing) {
       const pendingRes = await this.prisma.reservation.findFirst({
         where: {
@@ -62,7 +72,9 @@ export class ReservationService {
         },
       });
       if (pendingRes) {
-        throw new ConflictException('You already have an active reservation for this property');
+        throw new ConflictException(
+          'You already have an active reservation for this property',
+        );
       }
     }
 
@@ -129,9 +141,22 @@ export class ReservationService {
       })
       .catch(() => {});
 
+    // Alert the company inbox about the new reservation (non-blocking).
+    this.emailService
+      .sendNewReservationAdminNotification({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        reservationNumber: reservation.reservationNumber,
+        propertyTitle: property.title,
+      })
+      .catch(() => {});
+
     return {
       success: true,
-      message: 'Your reservation request has been submitted. Our team will contact you shortly.',
+      message:
+        'Your reservation request has been submitted. Our team will contact you shortly.',
       reservationNumber: reservation.reservationNumber,
     };
   }
@@ -148,18 +173,43 @@ export class ReservationService {
     const limit = Math.min(50, Math.max(1, parseInt(query.limit ?? '20', 10)));
     const skip = (page - 1) * limit;
 
-    const VALID_STATUSES = new Set(['PENDING', 'CONFIRMED', 'EXPIRED', 'CANCELLED', 'CONVERTED_TO_SALE']);
+    const VALID_STATUSES = new Set([
+      'PENDING',
+      'CONFIRMED',
+      'EXPIRED',
+      'CANCELLED',
+      'CONVERTED_TO_SALE',
+    ]);
 
     const where: Record<string, unknown> = {
-      ...(query.status && VALID_STATUSES.has(query.status) && { status: query.status }),
+      ...(query.status &&
+        VALID_STATUSES.has(query.status) && { status: query.status }),
       ...(query.propertyId && { propertyId: query.propertyId }),
       ...(query.search && {
         OR: [
-          { reservationNumber: { contains: query.search, mode: 'insensitive' } },
-          { customer: { email: { contains: query.search, mode: 'insensitive' } } },
-          { customer: { firstName: { contains: query.search, mode: 'insensitive' } } },
-          { customer: { lastName: { contains: query.search, mode: 'insensitive' } } },
-          { property: { title: { contains: query.search, mode: 'insensitive' } } },
+          {
+            reservationNumber: { contains: query.search, mode: 'insensitive' },
+          },
+          {
+            customer: {
+              email: { contains: query.search, mode: 'insensitive' },
+            },
+          },
+          {
+            customer: {
+              firstName: { contains: query.search, mode: 'insensitive' },
+            },
+          },
+          {
+            customer: {
+              lastName: { contains: query.search, mode: 'insensitive' },
+            },
+          },
+          {
+            property: {
+              title: { contains: query.search, mode: 'insensitive' },
+            },
+          },
         ],
       }),
     };
@@ -168,8 +218,24 @@ export class ReservationService {
       this.prisma.reservation.findMany({
         where,
         include: {
-          property: { select: { id: true, title: true, state: true, city: true, listingPrice: true } },
-          customer: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
+          property: {
+            select: {
+              id: true,
+              title: true,
+              state: true,
+              city: true,
+              listingPrice: true,
+            },
+          },
+          customer: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              phone: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -242,7 +308,9 @@ export class ReservationService {
       CONVERTED_TO_SALE: [],
     };
 
-    const reservation = await this.prisma.reservation.findUnique({ where: { id } });
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id },
+    });
     if (!reservation) throw new NotFoundException('Reservation not found');
 
     const allowed = VALID_TRANSITIONS[reservation.status] ?? [];
@@ -258,7 +326,10 @@ export class ReservationService {
         status: status as never,
         notes: notes ?? reservation.notes,
         ...(status === 'CONFIRMED' && { confirmedAt: new Date() }),
-        ...(status === 'CANCELLED' && { cancelledAt: new Date(), cancellationReason: notes ?? null }),
+        ...(status === 'CANCELLED' && {
+          cancelledAt: new Date(),
+          cancellationReason: notes ?? null,
+        }),
       },
     });
 
@@ -353,8 +424,12 @@ export class ReservationService {
       where: { entityType: 'RESERVATION', entityId: reservationId },
       orderBy: { createdAt: 'asc' },
       select: {
-        id: true, action: true, actorEmail: true,
-        oldValues: true, newValues: true, createdAt: true,
+        id: true,
+        action: true,
+        actorEmail: true,
+        oldValues: true,
+        newValues: true,
+        createdAt: true,
       },
     });
     return { items: logs };

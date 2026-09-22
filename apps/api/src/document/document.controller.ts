@@ -51,15 +51,26 @@ export class DocumentController {
       entityType: body.entityType as never,
       entityId: body.entityId,
       referenceNumber: body.referenceNumber || undefined,
-      securityClassification: (body.securityClassification as never) || undefined,
+      securityClassification:
+        (body.securityClassification as never) || undefined,
       department: body.department || undefined,
       tags: body.tags
-        ? body.tags.split(',').map((t) => t.trim()).filter(Boolean)
+        ? body.tags
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean)
         : [],
-      expirationDate: body.expirationDate ? new Date(body.expirationDate) : undefined,
+      expirationDate: body.expirationDate
+        ? new Date(body.expirationDate)
+        : undefined,
     };
 
-    return this.documentService.upload(dto, file, user.employeeId ?? user.id, user.email);
+    return this.documentService.upload(
+      dto,
+      file,
+      user.employeeId ?? user.id,
+      user.email,
+    );
   }
 
   @Get()
@@ -74,7 +85,13 @@ export class DocumentController {
     @Query('entityId') entityId?: string,
   ) {
     return this.documentService.findAll({
-      page, limit, search, category, status, entityType, entityId,
+      page,
+      limit,
+      search,
+      category,
+      status,
+      entityType,
+      entityId,
     });
   }
 
@@ -122,6 +139,10 @@ export class DocumentController {
   @Delete(':id')
   @RequirePermissions('document.approve')
   remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
-    return this.documentService.remove(id, user.employeeId ?? user.id, user.email);
+    return this.documentService.remove(
+      id,
+      user.employeeId ?? user.id,
+      user.email,
+    );
   }
 }

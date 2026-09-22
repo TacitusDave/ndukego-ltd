@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { CompanyService } from './company.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
@@ -13,7 +23,10 @@ export class CompanyController {
 
   @Post()
   @RequirePermissions('company.update')
-  create(@Body() body: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+  create(
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.companyService.create(body as never, user);
   }
 
@@ -37,32 +50,48 @@ export class CompanyController {
 
   @Patch(':id')
   @RequirePermissions('company.update')
-  update(@Param('id') id: string, @Body() body: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+  update(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.companyService.update(id, body as never, user);
   }
 
   @Post(':id/branches')
   @RequirePermissions('company.update')
-  createBranch(@Param('id') id: string, @Body() body: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+  createBranch(
+    @Param('id') id: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.companyService.createBranch(id, body as never, user);
   }
 
   @Patch('branches/:branchId')
   @RequirePermissions('company.update')
-  updateBranch(@Param('branchId') branchId: string, @Body() body: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+  updateBranch(
+    @Param('branchId') branchId: string,
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.companyService.updateBranch(branchId, body as never, user);
   }
 
   @Delete('branches/:branchId')
   @RequirePermissions('company.update')
-  deleteBranch(@Param('branchId') branchId: string, @CurrentUser() user: AuthenticatedUser) {
+  deleteBranch(
+    @Param('branchId') branchId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.companyService.deleteBranch(branchId, user);
   }
 
   @Post('departments')
   @RequirePermissions('company.update')
   createDepartment(
-    @Body() body: { name: string; code: string; description?: string; headId?: string },
+    @Body()
+    body: { name: string; code: string; description?: string; headId?: string },
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.companyService.createDepartment(body, user);
@@ -72,7 +101,8 @@ export class CompanyController {
   @RequirePermissions('company.update')
   updateDepartment(
     @Param('id') id: string,
-    @Body() body: { name?: string; description?: string; headId?: string | null },
+    @Body()
+    body: { name?: string; description?: string; headId?: string | null },
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.companyService.updateDepartment(id, body, user);
@@ -80,7 +110,10 @@ export class CompanyController {
 
   @Delete('departments/:id')
   @RequirePermissions('company.update')
-  deleteDepartment(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  deleteDepartment(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.companyService.deleteDepartment(id, user);
   }
 }

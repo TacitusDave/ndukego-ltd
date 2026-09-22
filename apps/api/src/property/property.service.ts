@@ -10,13 +10,21 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { EmailService } from '../email/email.service';
 import { StorageService } from '../storage/storage.service';
-import { generateReference, slugify, isValidPropertyStatusTransition, calculatePagination } from '@nhgp/lib';
+import {
+  generateReference,
+  slugify,
+  isValidPropertyStatusTransition,
+  calculatePagination,
+} from '@nhgp/lib';
 import { PropertyStatus, Prisma } from '@nhgp/database';
 import { AuthenticatedUser } from '@nhgp/types';
 
-function extractCoordsFromUrl(url: string): { lat: number; lng: number } | null {
+function extractCoordsFromUrl(
+  url: string,
+): { lat: number; lng: number } | null {
   const atMatch = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
-  if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
+  if (atMatch)
+    return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
   const qMatch = url.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
   if (qMatch) return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
   return null;
@@ -31,8 +39,13 @@ export class PropertyService {
     private readonly storage: StorageService,
   ) {}
 
-  async create(data: Prisma.PropertyCreateInput & { estateId?: string; developmentId?: string }, user: AuthenticatedUser) {
-    const count = await this.prisma.property.count();
+  async create(
+    data: Prisma.PropertyCreateInput & {
+      estateId?: string;
+      developmentId?: string;
+    },
+    user: AuthenticatedUser,
+  ) {
     const internalNumber = generateReference('PROP');
     const slug = slugify(data.title) + '-' + Date.now().toString(36);
 
@@ -55,10 +68,16 @@ export class PropertyService {
         installmentAllowed: data.installmentAllowed ?? false,
         reservationAmount: data.reservationAmount,
         estate: data.estateId ? { connect: { id: data.estateId } } : undefined,
-        development: data.developmentId ? { connect: { id: data.developmentId } } : undefined,
+        development: data.developmentId
+          ? { connect: { id: data.developmentId } }
+          : undefined,
         createdById: user.employeeId ?? user.id,
         statusHistory: {
-          create: { toStatus: 'DRAFT', changedById: user.employeeId ?? user.id, reason: 'Property created' },
+          create: {
+            toStatus: 'DRAFT',
+            changedById: user.employeeId ?? user.id,
+            reason: 'Property created',
+          },
         },
       },
       include: { estate: true, development: true },
@@ -94,22 +113,46 @@ export class PropertyService {
     const { skip } = calculatePagination(page, limit, 0);
 
     const VALID_CATEGORIES = new Set([
-      'LAND','HOUSE','DUPLEX','BUNGALOW','APARTMENT','COMMERCIAL','WAREHOUSE',
-      'OFFICE','SHOP','HOTEL','ESTATE_PLOT','FARM_LAND','MIXED_USE','INDUSTRIAL',
-      'LUXURY_HOME','PROJECT_DEVELOPMENT',
+      'LAND',
+      'HOUSE',
+      'DUPLEX',
+      'BUNGALOW',
+      'APARTMENT',
+      'COMMERCIAL',
+      'WAREHOUSE',
+      'OFFICE',
+      'SHOP',
+      'HOTEL',
+      'ESTATE_PLOT',
+      'FARM_LAND',
+      'MIXED_USE',
+      'INDUSTRIAL',
+      'LUXURY_HOME',
+      'PROJECT_DEVELOPMENT',
     ]);
     const VALID_TYPES = new Set([
-      'RESIDENTIAL','COMMERCIAL','INDUSTRIAL','AGRICULTURAL','INVESTMENT','MIXED_USE',
+      'RESIDENTIAL',
+      'COMMERCIAL',
+      'INDUSTRIAL',
+      'AGRICULTURAL',
+      'INVESTMENT',
+      'MIXED_USE',
     ]);
 
     const where: Prisma.PropertyWhereInput = {
       deletedAt: null,
       ...(query.publicOnly && { status: 'PUBLISHED' }),
       ...(query.status && { status: query.status }),
-      ...(query.category && VALID_CATEGORIES.has(query.category) && { category: query.category as never }),
-      ...(query.type && VALID_TYPES.has(query.type) && { type: query.type as never }),
+      ...(query.category &&
+        VALID_CATEGORIES.has(query.category) && {
+          category: query.category as never,
+        }),
+      ...(query.type &&
+        VALID_TYPES.has(query.type) && { type: query.type as never }),
       ...(query.estateId && { estateId: query.estateId }),
-      ...(query.state && { state: { equals: query.state, mode: 'insensitive' } }),
+      ...(query.state && {
+        state: { equals: query.state, mode: 'insensitive' },
+      }),
       ...(query.featured !== undefined && { featured: query.featured }),
       ...(query.search && {
         OR: [
@@ -130,7 +173,12 @@ export class PropertyService {
         include: {
           estate: { select: { id: true, name: true, slug: true } },
           development: { select: { id: true, name: true, slug: true } },
-          media: { where: { isCover: true }, take: 1 },
+          // All media (cover first), so listing cards can run a hover
+          // slideshow across photos and video clips.
+          media: {
+            orderBy: [{ isCover: 'desc' }, { sortOrder: 'asc' }],
+            take: 10,
+          },
         },
       }),
       this.prisma.property.count({ where }),
@@ -146,7 +194,9 @@ export class PropertyService {
         estate: true,
         development: true,
         building: true,
-        manager: { select: { id: true, firstName: true, lastName: true, email: true } },
+        manager: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
         media: { orderBy: { sortOrder: 'asc' } },
         statusHistory: { orderBy: { createdAt: 'desc' }, take: 10 },
         inspections: { orderBy: { createdAt: 'desc' }, take: 5 },
@@ -165,11 +215,17 @@ export class PropertyService {
     return property;
   }
 
-  async update(id: string, data: Partial<Prisma.PropertyUpdateInput>, user: AuthenticatedUser) {
+  async update(
+    id: string,
+    data: Partial<Prisma.PropertyUpdateInput>,
+    user: AuthenticatedUser,
+  ) {
     const existing = await this.findOne(id);
 
     if (existing.status === 'SOLD') {
-      throw new ForbiddenException('Sold properties cannot be modified (Rule 2)');
+      throw new ForbiddenException(
+        'Sold properties cannot be modified (Rule 2)',
+      );
     }
 
     const hasExplicitCoords =
@@ -185,7 +241,10 @@ export class PropertyService {
 
     const property = await this.prisma.property.update({
       where: { id },
-      data: { ...data, updatedById: user.employeeId ?? user.id } as Prisma.PropertyUpdateInput,
+      data: {
+        ...data,
+        updatedById: user.employeeId ?? user.id,
+      } as Prisma.PropertyUpdateInput,
     });
 
     await this.auditService.log({
@@ -202,11 +261,18 @@ export class PropertyService {
     return property;
   }
 
-  async transitionStatus(id: string, toStatus: PropertyStatus, reason: string | undefined, user: AuthenticatedUser) {
+  async transitionStatus(
+    id: string,
+    toStatus: PropertyStatus,
+    reason: string | undefined,
+    user: AuthenticatedUser,
+  ) {
     const property = await this.findOne(id);
 
     if (property.status === 'SOLD' && toStatus !== 'ARCHIVED') {
-      throw new ForbiddenException('Sold property cannot return to available status (Rule 2)');
+      throw new ForbiddenException(
+        'Sold property cannot return to available status (Rule 2)',
+      );
     }
 
     if (!isValidPropertyStatusTransition(property.status, toStatus)) {
@@ -219,12 +285,22 @@ export class PropertyService {
       await this.validatePublishRequirements(id);
     }
 
-    if (toStatus === 'ARCHIVED' && !user.permissions.includes('property.archive')) {
-      throw new ForbiddenException('Only management can archive properties (Rule 3)');
+    if (
+      toStatus === 'ARCHIVED' &&
+      !user.permissions.includes('property.archive')
+    ) {
+      throw new ForbiddenException(
+        'Only management can archive properties (Rule 3)',
+      );
     }
 
-    if (toStatus === 'APPROVED' && !user.permissions.includes('property.approve')) {
-      throw new ForbiddenException('Only verified employees may approve listings (Rule 4)');
+    if (
+      toStatus === 'APPROVED' &&
+      !user.permissions.includes('property.approve')
+    ) {
+      throw new ForbiddenException(
+        'Only verified employees may approve listings (Rule 4)',
+      );
     }
 
     const updateData: Prisma.PropertyUpdateInput = {
@@ -274,12 +350,16 @@ export class PropertyService {
     // Phase 1: only require at least one photo.
     // Document and inspection checks will be re-enabled in Phase 2
     // once those admin UI modules are built.
-    const media = await this.prisma.propertyMedia.count({ where: { propertyId } });
+    const media = await this.prisma.propertyMedia.count({
+      where: { propertyId },
+    });
 
     if (media < 1) {
       throw new BadRequestException({
         message: 'Property cannot be published (Rule 1)',
-        requirements: ['At least one photograph must be uploaded before publishing'],
+        requirements: [
+          'At least one photograph must be uploaded before publishing',
+        ],
       });
     }
   }
@@ -307,9 +387,13 @@ export class PropertyService {
     const property = await this.findOne(id);
 
     // Delete all media files from storage first
-    const mediaRecords = await this.prisma.propertyMedia.findMany({ where: { propertyId: id } });
+    const mediaRecords = await this.prisma.propertyMedia.findMany({
+      where: { propertyId: id },
+    });
     await Promise.allSettled(
-      mediaRecords.map((m) => this.storage.delete(m.url.replace('/uploads/', ''))),
+      mediaRecords.map((m) =>
+        this.storage.delete(m.url.replace('/uploads/', '')),
+      ),
     );
 
     // Delete related records that don't have CASCADE, then delete the property
@@ -338,16 +422,25 @@ export class PropertyService {
     propertyId: string,
     file: Express.Multer.File,
     body: { type?: string; title?: string; isCover?: boolean },
-    user: AuthenticatedUser,
+    _user: AuthenticatedUser,
   ) {
     await this.findOne(propertyId);
 
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    if (!allowed.includes(file.mimetype)) {
-      throw new BadRequestException('Only JPEG, PNG, WebP, and GIF images are allowed');
+    const imageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const videoTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+    const isVideo = videoTypes.includes(file.mimetype);
+    if (!imageTypes.includes(file.mimetype) && !isVideo) {
+      throw new BadRequestException(
+        'Only JPEG, PNG, WebP, GIF images and MP4, WebM, MOV videos are allowed',
+      );
     }
-    if (file.size > 10 * 1024 * 1024) {
-      throw new BadRequestException('Image must be smaller than 10 MB');
+    const maxBytes = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      throw new BadRequestException(
+        isVideo
+          ? 'Video must be smaller than 50 MB'
+          : 'Image must be smaller than 10 MB',
+      );
     }
 
     const ext = extname(file.originalname) || `.${file.mimetype.split('/')[1]}`;
@@ -364,12 +457,14 @@ export class PropertyService {
       });
     }
 
-    const existing = await this.prisma.propertyMedia.count({ where: { propertyId } });
+    const existing = await this.prisma.propertyMedia.count({
+      where: { propertyId },
+    });
 
     const media = await this.prisma.propertyMedia.create({
       data: {
         propertyId,
-        type: body.type || 'IMAGE',
+        type: isVideo ? 'VIDEO' : body.type || 'IMAGE',
         url: `/uploads/properties/${propertyId}/${filename}`,
         title: body.title,
         isCover: isCover || existing === 0,
@@ -386,7 +481,9 @@ export class PropertyService {
     });
     if (!media) throw new NotFoundException('Media not found');
 
-    await this.storage.delete(media.url.replace('/uploads/', '')).catch(() => undefined);
+    await this.storage
+      .delete(media.url.replace('/uploads/', ''))
+      .catch(() => undefined);
     await this.prisma.propertyMedia.delete({ where: { id: mediaId } });
 
     if (media.isCover) {
@@ -395,7 +492,10 @@ export class PropertyService {
         orderBy: { sortOrder: 'asc' },
       });
       if (next) {
-        await this.prisma.propertyMedia.update({ where: { id: next.id }, data: { isCover: true } });
+        await this.prisma.propertyMedia.update({
+          where: { id: next.id },
+          data: { isCover: true },
+        });
       }
     }
 
@@ -408,8 +508,14 @@ export class PropertyService {
     });
     if (!media) throw new NotFoundException('Media not found');
 
-    await this.prisma.propertyMedia.updateMany({ where: { propertyId }, data: { isCover: false } });
-    await this.prisma.propertyMedia.update({ where: { id: mediaId }, data: { isCover: true } });
+    await this.prisma.propertyMedia.updateMany({
+      where: { propertyId },
+      data: { isCover: false },
+    });
+    await this.prisma.propertyMedia.update({
+      where: { id: mediaId },
+      data: { isCover: true },
+    });
 
     return { success: true };
   }
@@ -428,11 +534,17 @@ export class PropertyService {
     }
 
     const note = [
-      data.propertyTitle ? `Inquiry about: ${data.propertyTitle}` : 'General property inquiry',
+      data.propertyTitle
+        ? `Inquiry about: ${data.propertyTitle}`
+        : 'General property inquiry',
       data.message ? `Message: ${data.message}` : '',
-    ].filter(Boolean).join('\n');
+    ]
+      .filter(Boolean)
+      .join('\n');
 
-    const existing = await this.prisma.customer.findFirst({ where: { email: data.email } });
+    const existing = await this.prisma.customer.findFirst({
+      where: { email: data.email },
+    });
 
     let customerId: string;
 
@@ -480,19 +592,43 @@ export class PropertyService {
       action: 'CREATE',
       entityType: 'CUSTOMER',
       entityId: customerId,
-      entityLabel: [data.firstName, data.lastName].filter(Boolean).join(' ') || data.email,
-      newValues: { source: 'Website inquiry', propertyId: data.propertyId ?? null },
+      entityLabel:
+        [data.firstName, data.lastName].filter(Boolean).join(' ') || data.email,
+      newValues: {
+        source: 'Website inquiry',
+        propertyId: data.propertyId ?? null,
+      },
     });
 
-    this.emailService.sendInquiryConfirmation(data.email, {
-      firstName: data.firstName ?? 'there',
-      propertyTitle: data.propertyTitle,
-    }).catch(() => {});
+    this.emailService
+      .sendInquiryConfirmation(data.email, {
+        firstName: data.firstName ?? 'there',
+        propertyTitle: data.propertyTitle,
+      })
+      .catch(() => {});
 
-    return { success: true, message: 'Your inquiry has been received. We will be in touch shortly.' };
+    // Alert the company inbox about the new inquiry (non-blocking).
+    this.emailService
+      .sendNewInquiryAdminNotification({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        message: data.message,
+        propertyTitle: data.propertyTitle,
+      })
+      .catch(() => {});
+
+    return {
+      success: true,
+      message: 'Your inquiry has been received. We will be in touch shortly.',
+    };
   }
 
-  async toggleFavorite(propertyId: string, customerId: string): Promise<{ isFavorited: boolean }> {
+  async toggleFavorite(
+    propertyId: string,
+    customerId: string,
+  ): Promise<{ isFavorited: boolean }> {
     const existing = await this.prisma.propertyFavorite.findFirst({
       where: { propertyId, customerId },
     });
@@ -500,20 +636,32 @@ export class PropertyService {
       await this.prisma.propertyFavorite.delete({ where: { id: existing.id } });
       return { isFavorited: false };
     }
-    const property = await this.prisma.property.findUnique({ where: { id: propertyId } });
+    const property = await this.prisma.property.findUnique({
+      where: { id: propertyId },
+    });
     if (!property) throw new NotFoundException('Property not found');
-    await this.prisma.propertyFavorite.create({ data: { propertyId, customerId } });
+    await this.prisma.propertyFavorite.create({
+      data: { propertyId, customerId },
+    });
     return { isFavorited: true };
   }
 
-  async getFavoriteStatus(propertyId: string, customerId: string): Promise<{ isFavorited: boolean }> {
+  async getFavoriteStatus(
+    propertyId: string,
+    customerId: string,
+  ): Promise<{ isFavorited: boolean }> {
     const existing = await this.prisma.propertyFavorite.findFirst({
       where: { propertyId, customerId },
     });
     return { isFavorited: !!existing };
   }
 
-  async getInquiries(query: { page?: number; limit?: number; search?: string; status?: string }) {
+  async getInquiries(query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  }) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const { skip } = calculatePagination(page, limit, 0);
@@ -556,7 +704,8 @@ export class PropertyService {
 
   async updateInquiryStatus(id: string, status: string) {
     const VALID = ['NEW', 'CONTACTED', 'CONVERTED', 'CLOSED'];
-    if (!VALID.includes(status)) throw new BadRequestException('Invalid status');
+    if (!VALID.includes(status))
+      throw new BadRequestException('Invalid status');
     const result = await this.prisma.$executeRawUnsafe(
       `UPDATE inquiries SET status = $1, updated_at = now() WHERE id = $2::uuid`,
       status,
@@ -576,12 +725,22 @@ export class PropertyService {
     return { success: true };
   }
 
-  async convertInquiryToReservation(inquiryId: string, user: AuthenticatedUser) {
-    const rows = await this.prisma.$queryRawUnsafe<{
-      id: string; propertyId: string | null; email: string;
-      firstName: string | null; lastName: string | null;
-      phone: string; message: string | null; status: string;
-    }[]>(
+  async convertInquiryToReservation(
+    inquiryId: string,
+    user: AuthenticatedUser,
+  ) {
+    const rows = await this.prisma.$queryRawUnsafe<
+      {
+        id: string;
+        propertyId: string | null;
+        email: string;
+        firstName: string | null;
+        lastName: string | null;
+        phone: string;
+        message: string | null;
+        status: string;
+      }[]
+    >(
       `SELECT id, property_id as "propertyId", email, first_name as "firstName",
               last_name as "lastName", phone, message, status
        FROM inquiries WHERE id = $1::uuid`,
@@ -589,9 +748,16 @@ export class PropertyService {
     );
     const inquiry = rows[0];
     if (!inquiry) throw new NotFoundException('Inquiry not found');
-    if (!inquiry.propertyId) throw new BadRequestException('This inquiry has no associated property — conversion requires a property');
-    if (inquiry.status === 'CONVERTED') throw new BadRequestException('This inquiry has already been converted to a reservation');
-    if (inquiry.status === 'CLOSED') throw new BadRequestException('Cannot convert a closed inquiry');
+    if (!inquiry.propertyId)
+      throw new BadRequestException(
+        'This inquiry has no associated property — conversion requires a property',
+      );
+    if (inquiry.status === 'CONVERTED')
+      throw new BadRequestException(
+        'This inquiry has already been converted to a reservation',
+      );
+    if (inquiry.status === 'CLOSED')
+      throw new BadRequestException('Cannot convert a closed inquiry');
 
     const property = await this.prisma.property.findUnique({
       where: { id: inquiry.propertyId, deletedAt: null },
@@ -634,7 +800,9 @@ export class PropertyService {
         propertyId: inquiry.propertyId,
         customerId,
         status: 'PENDING',
-        reservationAmount: property.reservationAmount ? Number(property.reservationAmount) : 0,
+        reservationAmount: property.reservationAmount
+          ? Number(property.reservationAmount)
+          : 0,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         notes: inquiry.message ?? null,
       },

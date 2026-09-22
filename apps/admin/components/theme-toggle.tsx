@@ -8,7 +8,8 @@ export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  // Deferred so the mount flag never sets synchronously inside the effect.
+  useEffect(() => { void Promise.resolve().then(() => setMounted(true)); }, []);
   if (!mounted) return <div className="h-8 w-8" />;
 
   const options = [

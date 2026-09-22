@@ -64,7 +64,9 @@ export class DocumentService {
       throw new BadRequestException('File exceeds 20 MB limit');
     }
     if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
-      throw new BadRequestException(`File type ${file.mimetype} is not allowed`);
+      throw new BadRequestException(
+        `File type ${file.mimetype} is not allowed`,
+      );
     }
 
     const documentNumber = generateReference('DOC');
@@ -148,14 +150,25 @@ export class DocumentService {
         ? {
             OR: [
               { title: { contains: query.search, mode: 'insensitive' } },
-              { documentNumber: { contains: query.search, mode: 'insensitive' } },
-              { referenceNumber: { contains: query.search, mode: 'insensitive' } },
+              {
+                documentNumber: { contains: query.search, mode: 'insensitive' },
+              },
+              {
+                referenceNumber: {
+                  contains: query.search,
+                  mode: 'insensitive',
+                },
+              },
             ],
           }
         : {}),
-      ...(query.category ? { category: query.category as DocumentCategory } : {}),
+      ...(query.category
+        ? { category: query.category as DocumentCategory }
+        : {}),
       ...(query.status ? { status: query.status as DocumentStatus } : {}),
-      ...(query.entityType ? { entityType: query.entityType as EntityType } : {}),
+      ...(query.entityType
+        ? { entityType: query.entityType as EntityType }
+        : {}),
       ...(query.entityId ? { entityId: query.entityId } : {}),
     };
 
@@ -247,7 +260,11 @@ export class DocumentService {
       entityLabel: document.title,
     });
 
-    return { buffer, mimeType: document.mimeType, filename: document.originalFilename };
+    return {
+      buffer,
+      mimeType: document.mimeType,
+      filename: document.originalFilename,
+    };
   }
 
   async updateStatus(

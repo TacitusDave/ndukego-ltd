@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Phone, Mail, MapPin, ArrowRight } from "lucide-react";
 import { LogoIcon } from "@nhgp/assets";
-import { FooterCtaBand } from "./footer-cta-band";
 import { DynamicYear } from "./dynamic-year";
 import { publicFetch } from "@/lib/api";
 
@@ -103,8 +102,6 @@ export async function Footer() {
   const liveEstates = estatesRes.data?.items ?? [];
   return (
     <footer>
-      <FooterCtaBand />
-
       {/* ── Main section ── */}
       <div className="bg-white/80 backdrop-blur-sm border-t border-gray-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">

@@ -127,7 +127,9 @@ export class CustomerService {
             reservedAt: true,
             confirmedAt: true,
             cancelledAt: true,
-            property: { select: { id: true, title: true, state: true, city: true } },
+            property: {
+              select: { id: true, title: true, state: true, city: true },
+            },
           },
         },
         sales: {
@@ -142,7 +144,9 @@ export class CustomerService {
             totalPaid: true,
             balanceDue: true,
             createdAt: true,
-            property: { select: { id: true, title: true, state: true, city: true } },
+            property: {
+              select: { id: true, title: true, state: true, city: true },
+            },
           },
         },
       },
@@ -151,7 +155,11 @@ export class CustomerService {
     return customer;
   }
 
-  async update(id: string, data: Record<string, unknown>, user: AuthenticatedUser) {
+  async update(
+    id: string,
+    data: Record<string, unknown>,
+    user: AuthenticatedUser,
+  ) {
     await this.findOne(id);
     const customer = await this.prisma.customer.update({
       where: { id },
@@ -172,11 +180,21 @@ export class CustomerService {
 
   async deactivate(id: string, user: AuthenticatedUser) {
     const customer = await this.findOne(id);
-    await this.prisma.customer.update({ where: { id }, data: { status: 'INACTIVE' as never } });
-    await this.prisma.user.updateMany({ where: { customerId: id }, data: { status: 'INACTIVE' as never } });
+    await this.prisma.customer.update({
+      where: { id },
+      data: { status: 'INACTIVE' as never },
+    });
+    await this.prisma.user.updateMany({
+      where: { customerId: id },
+      data: { status: 'INACTIVE' as never },
+    });
     await this.auditService.log({
-      actorId: user.id, actorEmail: user.email, action: 'UPDATE',
-      entityType: 'CUSTOMER', entityId: id, entityLabel: this.customerLabel(customer),
+      actorId: user.id,
+      actorEmail: user.email,
+      action: 'UPDATE',
+      entityType: 'CUSTOMER',
+      entityId: id,
+      entityLabel: this.customerLabel(customer),
       newValues: { status: 'INACTIVE' },
     });
     return { success: true };
@@ -184,11 +202,21 @@ export class CustomerService {
 
   async activate(id: string, user: AuthenticatedUser) {
     const customer = await this.findOne(id);
-    await this.prisma.customer.update({ where: { id }, data: { status: 'ACTIVE' as never } });
-    await this.prisma.user.updateMany({ where: { customerId: id }, data: { status: 'ACTIVE' as never } });
+    await this.prisma.customer.update({
+      where: { id },
+      data: { status: 'ACTIVE' as never },
+    });
+    await this.prisma.user.updateMany({
+      where: { customerId: id },
+      data: { status: 'ACTIVE' as never },
+    });
     await this.auditService.log({
-      actorId: user.id, actorEmail: user.email, action: 'UPDATE',
-      entityType: 'CUSTOMER', entityId: id, entityLabel: this.customerLabel(customer),
+      actorId: user.id,
+      actorEmail: user.email,
+      action: 'UPDATE',
+      entityType: 'CUSTOMER',
+      entityId: id,
+      entityLabel: this.customerLabel(customer),
       newValues: { status: 'ACTIVE' },
     });
     return { success: true };
@@ -205,14 +233,24 @@ export class CustomerService {
       data: { status: 'INACTIVE' as never, deletedAt: new Date() },
     });
     await this.auditService.log({
-      actorId: user.id, actorEmail: user.email, action: 'DELETE',
-      entityType: 'CUSTOMER', entityId: id, entityLabel: this.customerLabel(customer),
+      actorId: user.id,
+      actorEmail: user.email,
+      action: 'DELETE',
+      entityType: 'CUSTOMER',
+      entityId: id,
+      entityLabel: this.customerLabel(customer),
     });
     return { success: true };
   }
 
-  private customerLabel(c: { firstName?: string | null; lastName?: string | null; companyName?: string | null; email: string }) {
-    if (c.firstName || c.lastName) return `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim();
+  private customerLabel(c: {
+    firstName?: string | null;
+    lastName?: string | null;
+    companyName?: string | null;
+    email: string;
+  }) {
+    if (c.firstName || c.lastName)
+      return `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim();
     return c.companyName ?? c.email;
   }
 }

@@ -16,7 +16,10 @@ import { memoryStorage } from 'multer';
 import { PropertyService } from './property.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
-import { RequirePermissions, Public } from '../auth/decorators/permissions.decorator';
+import {
+  RequirePermissions,
+  Public,
+} from '../auth/decorators/permissions.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@nhgp/types';
 import { PropertyStatus } from '@nhgp/database';
@@ -38,7 +41,15 @@ export class PropertyController {
     @Query('featured') featured?: boolean,
   ) {
     return this.propertyService.findAll({
-      page, limit, search, category, type, state, estateId, featured, publicOnly: true,
+      page,
+      limit,
+      search,
+      category,
+      type,
+      state,
+      estateId,
+      featured,
+      publicOnly: true,
     });
   }
 
@@ -65,7 +76,14 @@ export class PropertyController {
     @Query('category') category?: string,
     @Query('estateId') estateId?: string,
   ) {
-    return this.propertyService.findAll({ page, limit, search, status, category, estateId });
+    return this.propertyService.findAll({
+      page,
+      limit,
+      search,
+      status,
+      category,
+      estateId,
+    });
   }
 
   @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -103,7 +121,10 @@ export class PropertyController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Post('admin/inquiries/:id/convert')
   @RequirePermissions('property.update')
-  convertInquiry(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  convertInquiry(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.propertyService.convertInquiryToReservation(id, user);
   }
 
@@ -117,7 +138,10 @@ export class PropertyController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Post()
   @RequirePermissions('property.create')
-  create(@Body() body: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+  create(
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.propertyService.create(body as never, user);
   }
 
@@ -140,7 +164,12 @@ export class PropertyController {
     @Body() body: { status: PropertyStatus; reason?: string },
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.propertyService.transitionStatus(id, body.status, body.reason, user);
+    return this.propertyService.transitionStatus(
+      id,
+      body.status,
+      body.reason,
+      user,
+    );
   }
 
   @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -193,14 +222,20 @@ export class PropertyController {
 
   @UseGuards(JwtAuthGuard)
   @Post(':id/favorite')
-  toggleFavorite(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  toggleFavorite(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     if (!user.customerId) return { isFavorited: false };
     return this.propertyService.toggleFavorite(id, user.customerId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/favorite-status')
-  getFavoriteStatus(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  getFavoriteStatus(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     if (!user.customerId) return { isFavorited: false };
     return this.propertyService.getFavoriteStatus(id, user.customerId);
   }

@@ -13,13 +13,13 @@ function generateSaleNumber(): string {
 }
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  DRAFT:           ['PENDING_APPROVAL', 'CANCELLED'],
+  DRAFT: ['PENDING_APPROVAL', 'CANCELLED'],
   PENDING_APPROVAL: ['APPROVED', 'CANCELLED'],
-  APPROVED:        ['ACTIVE', 'CANCELLED'],
-  ACTIVE:          ['COMPLETED', 'DISPUTED', 'CANCELLED'],
-  DISPUTED:        ['ACTIVE', 'CANCELLED'],
-  COMPLETED:       [],
-  CANCELLED:       [],
+  APPROVED: ['ACTIVE', 'CANCELLED'],
+  ACTIVE: ['COMPLETED', 'DISPUTED', 'CANCELLED'],
+  DISPUTED: ['ACTIVE', 'CANCELLED'],
+  COMPLETED: [],
+  CANCELLED: [],
 };
 
 @Injectable()
@@ -43,14 +43,31 @@ export class SaleService {
 
     const where: Record<string, unknown> = {
       deletedAt: null,
-      ...(query.status && VALID_STATUSES.has(query.status) && { status: query.status }),
+      ...(query.status &&
+        VALID_STATUSES.has(query.status) && { status: query.status }),
       ...(query.search && {
         OR: [
           { saleNumber: { contains: query.search, mode: 'insensitive' } },
-          { customer: { email: { contains: query.search, mode: 'insensitive' } } },
-          { customer: { firstName: { contains: query.search, mode: 'insensitive' } } },
-          { customer: { lastName: { contains: query.search, mode: 'insensitive' } } },
-          { property: { title: { contains: query.search, mode: 'insensitive' } } },
+          {
+            customer: {
+              email: { contains: query.search, mode: 'insensitive' },
+            },
+          },
+          {
+            customer: {
+              firstName: { contains: query.search, mode: 'insensitive' },
+            },
+          },
+          {
+            customer: {
+              lastName: { contains: query.search, mode: 'insensitive' },
+            },
+          },
+          {
+            property: {
+              title: { contains: query.search, mode: 'insensitive' },
+            },
+          },
         ],
       }),
     };
@@ -59,7 +76,9 @@ export class SaleService {
       this.prisma.sale.findMany({
         where,
         include: {
-          property: { select: { id: true, title: true, state: true, city: true } },
+          property: {
+            select: { id: true, title: true, state: true, city: true },
+          },
           customer: {
             select: {
               id: true,

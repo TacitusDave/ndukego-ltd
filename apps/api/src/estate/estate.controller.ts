@@ -16,7 +16,10 @@ import { memoryStorage } from 'multer';
 import { EstateService } from './estate.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
-import { RequirePermissions, Public } from '../auth/decorators/permissions.decorator';
+import {
+  RequirePermissions,
+  Public,
+} from '../auth/decorators/permissions.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from '@nhgp/types';
 
@@ -36,7 +39,8 @@ export class EstateController {
       page,
       limit,
       search,
-      featured: featured === 'true' ? true : featured === 'false' ? false : undefined,
+      featured:
+        featured === 'true' ? true : featured === 'false' ? false : undefined,
     });
   }
 
@@ -50,7 +54,13 @@ export class EstateController {
     @Query('status') status?: string,
     @Query('companyId') companyId?: string,
   ) {
-    return this.estateService.findAll({ page, limit, search, status, companyId });
+    return this.estateService.findAll({
+      page,
+      limit,
+      search,
+      status,
+      companyId,
+    });
   }
 
   @UseGuards(JwtAuthGuard, PermissionsGuard)
@@ -63,7 +73,10 @@ export class EstateController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Post()
   @RequirePermissions('estate.create')
-  create(@Body() body: Record<string, unknown>, @CurrentUser() user: AuthenticatedUser) {
+  create(
+    @Body() body: Record<string, unknown>,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     return this.estateService.create(body, user);
   }
 
@@ -83,7 +96,13 @@ export class EstateController {
   @RequirePermissions('estate.update')
   addPhase(
     @Param('id') id: string,
-    @Body() body: { name: string; code: string; description?: string; totalPlots?: number },
+    @Body()
+    body: {
+      name: string;
+      code: string;
+      description?: string;
+      totalPlots?: number;
+    },
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.estateService.addPhase(id, body, user);
@@ -94,7 +113,8 @@ export class EstateController {
   @RequirePermissions('estate.update')
   addBlock(
     @Param('id') id: string,
-    @Body() body: { name: string; code: string; section?: string; totalPlots?: number },
+    @Body()
+    body: { name: string; code: string; section?: string; totalPlots?: number },
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.estateService.addBlock(id, body, user);

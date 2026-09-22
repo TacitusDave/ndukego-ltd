@@ -28,7 +28,8 @@ export class InspectionController {
   @Post()
   @RequirePermissions('inspection.create')
   schedule(
-    @Body() body: {
+    @Body()
+    body: {
       propertyId: string;
       inspectorId: string;
       customerId?: string;
@@ -46,7 +47,11 @@ export class InspectionController {
       scheduledAt: new Date(body.scheduledAt),
       notes: body.notes,
     };
-    return this.inspectionService.schedule(dto, user.employeeId ?? user.id, user.email);
+    return this.inspectionService.schedule(
+      dto,
+      user.employeeId ?? user.id,
+      user.email,
+    );
   }
 
   @Get()
@@ -60,7 +65,15 @@ export class InspectionController {
     @Query('inspectorId') inspectorId?: string,
     @Query('propertyId') propertyId?: string,
   ) {
-    return this.inspectionService.findAll({ page, limit, search, status, type, inspectorId, propertyId });
+    return this.inspectionService.findAll({
+      page,
+      limit,
+      search,
+      status,
+      type,
+      inspectorId,
+      propertyId,
+    });
   }
 
   @Get(':id')
@@ -72,7 +85,11 @@ export class InspectionController {
   @Patch(':id/start')
   @RequirePermissions('inspection.update')
   start(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
-    return this.inspectionService.start(id, user.employeeId ?? user.id, user.email);
+    return this.inspectionService.start(
+      id,
+      user.employeeId ?? user.id,
+      user.email,
+    );
   }
 
   @Patch(':id/complete')
@@ -82,7 +99,12 @@ export class InspectionController {
     @Body() body: CompleteInspectionDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.inspectionService.complete(id, body, user.employeeId ?? user.id, user.email);
+    return this.inspectionService.complete(
+      id,
+      body,
+      user.employeeId ?? user.id,
+      user.email,
+    );
   }
 
   @Patch(':id/cancel')
@@ -92,7 +114,12 @@ export class InspectionController {
     @Body('reason') reason: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.inspectionService.cancel(id, reason ?? '', user.employeeId ?? user.id, user.email);
+    return this.inspectionService.cancel(
+      id,
+      reason ?? '',
+      user.employeeId ?? user.id,
+      user.email,
+    );
   }
 
   @Patch(':id/fail')
@@ -102,6 +129,11 @@ export class InspectionController {
     @Body('reason') reason: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.inspectionService.fail(id, reason ?? '', user.employeeId ?? user.id, user.email);
+    return this.inspectionService.fail(
+      id,
+      reason ?? '',
+      user.employeeId ?? user.id,
+      user.email,
+    );
   }
 }

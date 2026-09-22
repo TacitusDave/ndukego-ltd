@@ -28,7 +28,11 @@ export class PaymentService {
     private readonly auditService: AuditService,
   ) {}
 
-  async record(dto: RecordPaymentDto, recordedById: string, actorEmail: string) {
+  async record(
+    dto: RecordPaymentDto,
+    recordedById: string,
+    actorEmail: string,
+  ) {
     if (dto.amount <= 0) {
       throw new BadRequestException('Payment amount must be greater than zero');
     }
@@ -80,7 +84,13 @@ export class PaymentService {
       entityType: 'PAYMENT',
       entityId: payment.id,
       entityLabel: `${paymentNumber} — ₦${dto.amount.toLocaleString()}`,
-      newValues: { paymentNumber, amount: dto.amount, type: dto.type, method: dto.method, saleId: dto.saleId },
+      newValues: {
+        paymentNumber,
+        amount: dto.amount,
+        type: dto.type,
+        method: dto.method,
+        saleId: dto.saleId,
+      },
     });
 
     return { ...payment, amount: Number(payment.amount) };
@@ -129,8 +139,17 @@ export class PaymentService {
     const payment = await this.prisma.payment.findUnique({
       where: { id },
       include: {
-        sale: { select: { id: true, saleNumber: true, finalPrice: true, balanceDue: true } },
-        customer: { select: { id: true, firstName: true, lastName: true, email: true } },
+        sale: {
+          select: {
+            id: true,
+            saleNumber: true,
+            finalPrice: true,
+            balanceDue: true,
+          },
+        },
+        customer: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
         recordedBy: { select: { id: true, firstName: true, lastName: true } },
         verifiedBy: { select: { id: true, firstName: true, lastName: true } },
       },
@@ -143,7 +162,9 @@ export class PaymentService {
     const payment = await this.prisma.payment.findUnique({ where: { id } });
     if (!payment) throw new NotFoundException('Payment not found');
     if (payment.status !== 'PENDING_VERIFICATION') {
-      throw new BadRequestException(`Cannot verify a payment with status ${payment.status}`);
+      throw new BadRequestException(
+        `Cannot verify a payment with status ${payment.status}`,
+      );
     }
 
     const updated = await this.prisma.payment.update({
@@ -169,11 +190,18 @@ export class PaymentService {
     return { ...updated, amount: Number(updated.amount) };
   }
 
-  async reject(id: string, reason: string, actorId: string, actorEmail: string) {
+  async reject(
+    id: string,
+    reason: string,
+    actorId: string,
+    actorEmail: string,
+  ) {
     const payment = await this.prisma.payment.findUnique({ where: { id } });
     if (!payment) throw new NotFoundException('Payment not found');
     if (payment.status !== 'PENDING_VERIFICATION') {
-      throw new BadRequestException(`Cannot reject a payment with status ${payment.status}`);
+      throw new BadRequestException(
+        `Cannot reject a payment with status ${payment.status}`,
+      );
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {

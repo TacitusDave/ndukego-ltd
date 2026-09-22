@@ -14,6 +14,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { EmailService } from '../email/email.service';
 import { JwtPayload } from '@nhgp/types';
+import type { JwtSignOptions } from '@nestjs/jwt';
 
 function generateCustomerNumber(): string {
   const timestamp = Date.now().toString(36).toUpperCase();
@@ -34,13 +35,16 @@ export class AuthService {
     private readonly emailService: EmailService,
   ) {}
 
-  async registerCustomer(data: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    phone: string;
-  }, ipAddress?: string) {
+  async registerCustomer(
+    data: {
+      email: string;
+      password: string;
+      firstName: string;
+      lastName: string;
+      phone: string;
+    },
+    ipAddress?: string,
+  ) {
     const normalizedEmail = data.email.toLowerCase();
 
     // Check for an existing User account
@@ -59,13 +63,19 @@ export class AuthService {
     });
     if (orphanedCustomer) {
       if (orphanedCustomer.user) {
-        throw new ConflictException('An account with this email already exists');
+        throw new ConflictException(
+          'An account with this email already exists',
+        );
       }
       // No linked user — safe to delete the orphaned record
       try {
-        await this.prisma.customer.delete({ where: { id: orphanedCustomer.id } });
+        await this.prisma.customer.delete({
+          where: { id: orphanedCustomer.id },
+        });
       } catch {
-        throw new ConflictException('An account with this email already exists');
+        throw new ConflictException(
+          'An account with this email already exists',
+        );
       }
     }
 
@@ -163,7 +173,15 @@ export class AuthService {
             status: true,
             reservedAt: true,
             expiresAt: true,
-            property: { select: { id: true, title: true, state: true, city: true, listingPrice: true } },
+            property: {
+              select: {
+                id: true,
+                title: true,
+                state: true,
+                city: true,
+                listingPrice: true,
+              },
+            },
           },
           orderBy: { createdAt: 'desc' },
           take: 10,
@@ -180,7 +198,11 @@ export class AuthService {
                 listingPrice: true,
                 category: true,
                 status: true,
-                media: { where: { isCover: true }, take: 1, select: { url: true } },
+                media: {
+                  where: { isCover: true },
+                  take: 1,
+                  select: { url: true },
+                },
               },
             },
           },
@@ -193,7 +215,12 @@ export class AuthService {
     return customer;
   }
 
-  async login(email: string, password: string, ipAddress?: string, userAgent?: string) {
+  async login(
+    email: string,
+    password: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { email: email.toLowerCase() },
       include: {
@@ -225,7 +252,9 @@ export class AuthService {
     }
 
     if (user.lockedUntil && user.lockedUntil > new Date()) {
-      throw new UnauthorizedException('Account temporarily locked. Try again later.');
+      throw new UnauthorizedException(
+        'Account temporarily locked. Try again later.',
+      );
     }
 
     if (user.status !== 'ACTIVE') {
@@ -267,10 +296,18 @@ export class AuthService {
       },
     });
 
-    const tokens = await this.generateTokens(user.id, user.email, user.type, permissions, {
-      employeeId: user.employeeId ?? undefined,
-      customerId: user.customerId ?? undefined,
-    }, ipAddress, userAgent);
+    const tokens = await this.generateTokens(
+      user.id,
+      user.email,
+      user.type,
+      permissions,
+      {
+        employeeId: user.employeeId ?? undefined,
+        customerId: user.customerId ?? undefined,
+      },
+      ipAddress,
+      userAgent,
+    );
 
     await this.auditService.log({
       actorId: user.id,
@@ -308,7 +345,10 @@ export class AuthService {
       throw new UnauthorizedException('User inactive');
     }
 
-    const permissions = await this.getPermissionsForUser(user.id, user.employeeId);
+    const permissions = await this.getPermissionsForUser(
+      user.id,
+      user.employeeId,
+    );
 
     await this.prisma.refreshToken.update({
       where: { id: stored.id },
@@ -320,7 +360,10 @@ export class AuthService {
       user.email,
       user.type,
       permissions,
-      { employeeId: user.employeeId ?? undefined, customerId: user.customerId ?? undefined },
+      {
+        employeeId: user.employeeId ?? undefined,
+        customerId: user.customerId ?? undefined,
+      },
       ipAddress,
       userAgent,
     );
@@ -348,7 +391,11 @@ export class AuthService {
     return { success: true, message: 'Logged out successfully' };
   }
 
-  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new UnauthorizedException();
 
@@ -377,14 +424,19 @@ export class AuthService {
     return { success: true, message: 'Password changed successfully' };
   }
 
-  async updateCustomerProfile(customerId: string, data: {
-    firstName?: string;
-    lastName?: string;
-    phone?: string;
-    city?: string;
-    state?: string;
-  }) {
-    const customer = await this.prisma.customer.findUnique({ where: { id: customerId } });
+  async updateCustomerProfile(
+    customerId: string,
+    data: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      city?: string;
+      state?: string;
+    },
+  ) {
+    const customer = await this.prisma.customer.findUnique({
+      where: { id: customerId },
+    });
     if (!customer) throw new NotFoundException('Customer not found');
 
     const updated = await this.prisma.customer.update({
@@ -397,8 +449,14 @@ export class AuthService {
         state: data.state ?? customer.state,
       },
       select: {
-        id: true, customerNumber: true, firstName: true, lastName: true,
-        email: true, phone: true, city: true, state: true,
+        id: true,
+        customerNumber: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        city: true,
+        state: true,
       },
     });
 
@@ -407,7 +465,12 @@ export class AuthService {
 
   // ─── Super Admin TOTP ──────────────────────────────────────────
 
-  async superAdminLogin(email: string, totpCode: string, ipAddress?: string, userAgent?: string) {
+  async superAdminLogin(
+    email: string,
+    totpCode: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { email: email.toLowerCase() },
       include: {
@@ -415,7 +478,9 @@ export class AuthService {
           include: {
             roles: {
               include: {
-                role: { include: { permissions: { include: { permission: true } } } },
+                role: {
+                  include: { permissions: { include: { permission: true } } },
+                },
               },
             },
           },
@@ -427,16 +492,25 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.status !== 'ACTIVE') throw new UnauthorizedException('Account deactivated');
+    if (user.status !== 'ACTIVE')
+      throw new UnauthorizedException('Account deactivated');
 
     if (user.lockedUntil && user.lockedUntil > new Date()) {
-      throw new UnauthorizedException('Account temporarily locked. Try again later.');
+      throw new UnauthorizedException(
+        'Account temporarily locked. Try again later.',
+      );
     }
 
-    const totpSecret = this.configService.get<string>('SUPER_ADMIN_TOTP_SECRET');
-    if (!totpSecret) throw new UnauthorizedException('Super admin not configured');
+    const totpSecret = this.configService.get<string>(
+      'SUPER_ADMIN_TOTP_SECRET',
+    );
+    if (!totpSecret)
+      throw new UnauthorizedException('Super admin not configured');
 
-    const isValid = authenticator.verify({ token: totpCode, secret: totpSecret });
+    const isValid = authenticator.verify({
+      token: totpCode,
+      secret: totpSecret,
+    });
 
     if (!isValid) {
       const failedCount = user.failedLoginCount + 1;
@@ -444,7 +518,10 @@ export class AuthService {
         where: { id: user.id },
         data: {
           failedLoginCount: failedCount,
-          lockedUntil: failedCount >= MAX_FAILED_ATTEMPTS ? new Date(Date.now() + LOCK_DURATION_MS) : null,
+          lockedUntil:
+            failedCount >= MAX_FAILED_ATTEMPTS
+              ? new Date(Date.now() + LOCK_DURATION_MS)
+              : null,
         },
       });
       await this.auditService.log({
@@ -462,13 +539,22 @@ export class AuthService {
 
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { failedLoginCount: 0, lockedUntil: null, lastLoginAt: new Date(), lastLoginIp: ipAddress },
+      data: {
+        failedLoginCount: 0,
+        lockedUntil: null,
+        lastLoginAt: new Date(),
+        lastLoginIp: ipAddress,
+      },
     });
 
     const tokens = await this.generateTokens(
-      user.id, user.email, user.type, permissions,
+      user.id,
+      user.email,
+      user.type,
+      permissions,
       { employeeId: user.employeeId ?? undefined },
-      ipAddress, userAgent,
+      ipAddress,
+      userAgent,
     );
 
     await this.auditService.log({
@@ -481,7 +567,13 @@ export class AuthService {
     });
 
     return {
-      user: { id: user.id, email: user.email, type: user.type, employeeId: user.employeeId, permissions },
+      user: {
+        id: user.id,
+        email: user.email,
+        type: user.type,
+        employeeId: user.employeeId,
+        permissions,
+      },
       ...tokens,
     };
   }
@@ -507,7 +599,10 @@ export class AuthService {
     return Array.from(set);
   }
 
-  private async getPermissionsForUser(userId: string, employeeId: string | null): Promise<string[]> {
+  private async getPermissionsForUser(
+    userId: string,
+    employeeId: string | null,
+  ): Promise<string[]> {
     if (!employeeId) {
       const customerRole = await this.prisma.role.findUnique({
         where: { code: 'CUSTOMER' },
@@ -550,12 +645,14 @@ export class AuthService {
     };
 
     const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_ACCESS_SECRET'),
-      expiresIn: this.configService.get('JWT_ACCESS_EXPIRY') || '15m',
+      secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+      expiresIn: (this.configService.get<string>('JWT_ACCESS_EXPIRY') ||
+        '15m') as JwtSignOptions['expiresIn'], // jwt expects ms-literal | number
     });
 
     const refreshTokenValue = randomBytes(64).toString('hex');
-    const refreshExpiry = this.configService.get('JWT_REFRESH_EXPIRY') || '7d';
+    const refreshExpiry: string =
+      this.configService.get<string>('JWT_REFRESH_EXPIRY') || '7d';
     const expiresAt = new Date(Date.now() + this.parseExpiry(refreshExpiry));
 
     await this.prisma.refreshToken.create({
@@ -568,13 +665,17 @@ export class AuthService {
       },
     });
 
-    return { accessToken, refreshToken: refreshTokenValue, expiresIn: refreshExpiry };
+    return {
+      accessToken,
+      refreshToken: refreshTokenValue,
+      expiresIn: refreshExpiry,
+    };
   }
 
   private parseExpiry(expiry: string): number {
     const match = expiry.match(/^(\d+)([smhd])$/);
     if (!match) return 7 * 24 * 60 * 60 * 1000;
-    const value = parseInt(match[1]!, 10);
+    const value = parseInt(match[1], 10);
     const unit = match[2];
     const multipliers: Record<string, number> = {
       s: 1000,
@@ -582,6 +683,6 @@ export class AuthService {
       h: 60 * 60 * 1000,
       d: 24 * 60 * 60 * 1000,
     };
-    return value * (multipliers[unit!] ?? multipliers.d!);
+    return value * (multipliers[unit] ?? multipliers.d);
   }
 }

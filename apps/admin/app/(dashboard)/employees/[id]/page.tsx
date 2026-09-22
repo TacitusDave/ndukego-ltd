@@ -106,7 +106,7 @@ export default function EmployeeDetailPage({ params }: { params: Promise<{ id: s
       setId(resolvedId);
       loadEmployee(resolvedId);
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [params]);
 
   async function handleSave() {
