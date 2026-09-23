@@ -4900,3 +4900,110 @@ Inconsistent column data: Error creating UUID, invalid character: expected an op
   },
   clientVersion: [32m'6.19.3'[39m
 }
+[2J[3J[H[[90m02:26:05[0m] File change detected. Starting incremental compilation...
+
+[[90m02:26:06[0m] Found 0 errors. Watching for file changes.
+
+[2J[3J[H[[90m02:26:07[0m] File change detected. Starting incremental compilation...
+
+[[90m02:26:11[0m] Found 0 errors. Watching for file changes.
+
+[2J[3J[H[[90m02:26:12[0m] File change detected. Starting incremental compilation...
+
+[[90m02:26:13[0m] Found 0 errors. Watching for file changes.
+
+[2J[3J[H[[90m02:26:17[0m] File change detected. Starting incremental compilation...
+
+[[90m02:26:17[0m] Found 0 errors. Watching for file changes.
+
+[2J[3J[H[[90m02:26:18[0m] File change detected. Starting incremental compilation...
+
+[[90m02:26:20[0m] Found 0 errors. Watching for file changes.
+
+[2J[3J[H[[90m02:26:20[0m] File change detected. Starting incremental compilation...
+
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module './app.module'
+Require stack:
+- C:\Users\david\Desktop\Projects\Ndukego Homes Gallery Project\apps\api\dist\main.js
+    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
+    at Function._load (node:internal/modules/cjs/loader:1216:25)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
+    at Module.require (node:internal/modules/cjs/loader:1527:12)
+    at require (node:internal/modules/helpers:147:16)
+    at Object.<anonymous> (C:\Users\david\Desktop\Projects\Ndukego Homes Gallery Project\apps\api\src\main.ts:7:1)
+    at Module._compile (node:internal/modules/cjs/loader:1781:14)
+    at Object..js (node:internal/modules/cjs/loader:1913:10) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\david\\Desktop\\Projects\\Ndukego Homes Gallery Project\\apps\\api\\dist\\main.js'
+  ]
+}
+
+Node.js v22.23.1
+ERROR: The process with PID 5572 (child process of PID 39908) could not be terminated.
+Reason: The operation attempted is not supported.
+ERROR: The process with PID 39908 (child process of PID 21476) could not be terminated.
+Reason: There is no running instance of the task.
+ERROR: The process "39908" not found.
+node:child_process:991
+    throw err;
+    ^
+
+Error: Command failed: taskkill /pid 39908 /T /F
+ERROR: The process with PID 5572 (child process of PID 39908) could not be terminated.
+Reason: The operation attempted is not supported.
+ERROR: The process with PID 39908 (child process of PID 21476) could not be terminated.
+Reason: There is no running instance of the task.
+
+    at genericNodeError (node:internal/errors:983:15)
+    at wrappedFn (node:internal/errors:537:14)
+    at checkExecSyncError (node:child_process:916:11)
+    at execSync (node:child_process:988:15)
+    at treeKillSync (C:\Users\david\Desktop\Projects\Ndukego Homes Gallery Project\node_modules\.pnpm\@nestjs+cli@11.0.24_@types+node@24.13.3_prettier@3.7.4\node_modules\@nestjs\cli\lib\utils\tree-kill.js:7:38)
+    at C:\Users\david\Desktop\Projects\Ndukego Homes Gallery Project\node_modules\.pnpm\@nestjs+cli@11.0.24_@types+node@24.13.3_prettier@3.7.4\node_modules\@nestjs\cli\actions\start.action.js:92:46
+    at Object.onWatchStatusChange (C:\Users\david\Desktop\Projects\Ndukego Homes Gallery Project\node_modules\.pnpm\@nestjs+cli@11.0.24_@types+node@24.13.3_prettier@3.7.4\node_modules\@nestjs\cli\lib\compiler\watch-compiler.js:82:17)
+    at C:\Users\david\Desktop\Projects\Ndukego Homes Gallery Project\node_modules\.pnpm\typescript@5.9.2\node_modules\typescript\lib\typescript.js:133890:30
+    at emitFilesAndReportErrors (C:\Users\david\Desktop\Projects\Ndukego Homes Gallery Project\node_modules\.pnpm\typescript@5.9.2\node_modules\typescript\lib\typescript.js:133711:5)
+    at result.afterProgramCreate (C:\Users\david\Desktop\Projects\Ndukego Homes Gallery Project\node_modules\.pnpm\typescript@5.9.2\node_modules\typescript\lib\typescript.js:133886:5) {
+  status: 128,
+  signal: null,
+  output: [
+    null,
+    Buffer(0) [Uint8Array] [],
+    Buffer(281) [Uint8Array] [
+       69,  82,  82,  79,  82,  58,  32,  84, 104, 101,  32, 112,
+      114, 111,  99, 101, 115, 115,  32, 119, 105, 116, 104,  32,
+       80,  73,  68,  32,  53,  53,  55,  50,  32,  40,  99, 104,
+      105, 108, 100,  32, 112, 114, 111,  99, 101, 115, 115,  32,
+      111, 102,  32,  80,  73,  68,  32,  51,  57,  57,  48,  56,
+       41,  32,  99, 111, 117, 108, 100,  32, 110, 111, 116,  32,
+       98, 101,  32, 116, 101, 114, 109, 105, 110,  97, 116, 101,
+      100,  46,  13,  10,  82, 101,  97, 115, 111, 110,  58,  32,
+       84, 104, 101,  32,
+      ... 181 more items
+    ]
+  ],
+  pid: 38360,
+  stdout: Buffer(0) [Uint8Array] [],
+  stderr: Buffer(281) [Uint8Array] [
+     69,  82,  82,  79,  82,  58,  32,  84, 104, 101,  32, 112,
+    114, 111,  99, 101, 115, 115,  32, 119, 105, 116, 104,  32,
+     80,  73,  68,  32,  53,  53,  55,  50,  32,  40,  99, 104,
+    105, 108, 100,  32, 112, 114, 111,  99, 101, 115, 115,  32,
+    111, 102,  32,  80,  73,  68,  32,  51,  57,  57,  48,  56,
+     41,  32,  99, 111, 117, 108, 100,  32, 110, 111, 116,  32,
+     98, 101,  32, 116, 101, 114, 109, 105, 110,  97, 116, 101,
+    100,  46,  13,  10,  82, 101,  97, 115, 111, 110,  58,  32,
+     84, 104, 101,  32,
+    ... 181 more items
+  ]
+}
+
+Node.js v22.23.1
+ ELIFECYCLE  Command failed with exit code 1.
