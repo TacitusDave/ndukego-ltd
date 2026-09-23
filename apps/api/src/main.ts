@@ -4,6 +4,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import type { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import { extname } from 'path';
+import { createHash } from 'crypto';
 import { AppModule } from './app.module';
 import { StorageService } from './storage/storage.service';
 
@@ -43,13 +44,32 @@ async function bootstrap() {
           return res.status(400).end();
         }
         const buffer = await storage.read(relativePath);
-        res.setHeader(
-          'Content-Type',
+
+        // Content-based ETag: unchanged files answer the browser's revalidation
+        // with a bodyless 304 instead of re-streaming megabytes.
+        const etag = `"${createHash('sha1').update(buffer).digest('hex')}"`;
+        res.setHeader('ETag', etag);
+        if (req.headers['if-none-match'] === etag) {
+          res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+          return res.status(304).end();
+        }
+
+        const mime =
           MIME_BY_EXT[extname(relativePath).toLowerCase()] ??
-            'application/octet-stream',
+          'application/octet-stream';
+        res.setHeader('Content-Type', mime);
+        // Browsers only apply immutable caching to sniffable image types;
+        // everything else (PDFs, docs) revalidates via ETag instead.
+        const cacheable = /^(image\/|video\/)/.test(mime);
+        res.setHeader(
+          'Cache-Control',
+          cacheable
+            ? 'public, max-age=31536000, immutable'
+            : 'public, max-age=0, must-revalidate',
         );
-        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Content-Length', String(buffer.length));
         return res.status(200).send(buffer);
       } catch {
         logger.warn(`Upload not found: ${req.path}`);

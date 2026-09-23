@@ -91,9 +91,12 @@ export function EstateSitePlan({ sitePlanUrl, buildingTypes }: EstateSitePlanPro
       ? buildingTypes.map(toInternalPrototype)
       : [];
 
-  const planImageSrc = sitePlanUrl
-    ? resolveImageUrl(sitePlanUrl)
-    : "/prototype/Site-Plan.png";
+  // No uploaded plan → no fallback: an estate without a master plan must not
+  // silently render the built-in demo site plan (that was shipping the sample
+  // "Site-Plan.png" to production for estates that never configured one).
+  // The placeholder renders after all hooks below (rules of hooks).
+  const hasPlan = !!sitePlanUrl;
+  const planImageSrc = sitePlanUrl ? resolveImageUrl(sitePlanUrl) : "";
   const containerRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -109,6 +112,7 @@ export function EstateSitePlan({ sitePlanUrl, buildingTypes }: EstateSitePlanPro
 
   // Load image into hidden canvas for pixel sampling
   useEffect(() => {
+    if (!planImageSrc) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const img = new window.Image();
@@ -196,6 +200,19 @@ export function EstateSitePlan({ sitePlanUrl, buildingTypes }: EstateSitePlanPro
   // ── Close modal on outside click ─────────────────────────────────────────
   function handleContainerClick(e: React.MouseEvent<HTMLDivElement>) {
     handleClick(e);
+  }
+
+  // All hooks have run — an estate without an uploaded plan renders the
+  // placeholder (never the built-in demo plan).
+  if (!hasPlan) {
+    return (
+      <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-10 text-center">
+        <p className="text-sm font-semibold text-gray-600">Site plan coming soon</p>
+        <p className="mt-1 text-xs text-gray-400">
+          The interactive site plan for this estate is being prepared.
+        </p>
+      </div>
+    );
   }
 
   return (

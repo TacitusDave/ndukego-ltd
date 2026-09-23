@@ -232,8 +232,8 @@ export default async function EstateDetailPage({
         </section>
       )}
 
-      {/* ── Interactive Site Plan ─────────────────────────────── */}
-      {(estate.masterPlanUrl || estate.buildingTypesConfig?.length) ? (
+      {/* ── Interactive Site Plan (requires an uploaded master plan) ── */}
+      {estate.masterPlanUrl ? (
         <section className="relative py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <AnimateIn>

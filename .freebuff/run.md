@@ -33,21 +33,35 @@ pnpm --filter web build && pnpm --filter api build
 ```
 
 Dev servers (detached on Windows — Start-Process with -PassThru, stdout and
-stderr redirected to DIFFERENT files):
+stderr redirected to DIFFERENT files). Launch through the pinning launchers
+`.freebuff\start-api.cmd` / `.freebuff\start-web.cmd` (they `set PORT=…` first):
 ```powershell
 # API on :4000
-powershell -NoProfile -Command "(Start-Process -FilePath 'pnpm.cmd' -ArgumentList '--filter','api','dev' -RedirectStandardOutput '.freebuff\api.log' -RedirectStandardError '.freebuff\api.err.log' -WindowStyle Hidden -PassThru).Id"
+powershell -NoProfile -Command "(Start-Process -FilePath 'C:\Users\david\Desktop\Projects\Ndukego Homes Gallery Project\.freebuff\start-api.cmd' -RedirectStandardOutput 'C:\Users\david\Desktop\Projects\Ndukego Homes Gallery Project\.freebuff\api.log' -RedirectStandardError 'C:\Users\david\Desktop\Projects\Ndukego Homes Gallery Project\.freebuff\api.err.log' -WindowStyle Hidden -PassThru).Id"
 # Web on :3000 (the preview port)
-powershell -NoProfile -Command "(Start-Process -FilePath 'pnpm.cmd' -ArgumentList '--filter','web','dev' -RedirectStandardOutput '.freebuff\web.log' -RedirectStandardError '.freebuff\web.err.log' -WindowStyle Hidden -PassThru).Id"
-# Admin on :3001 (optional)
-powershell -NoProfile -Command "(Start-Process -FilePath 'pnpm.cmd' -ArgumentList '--filter','admin','dev' -RedirectStandardOutput '.freebuff\admin.log' -RedirectStandardError '.freebuff\admin.err.log' -WindowStyle Hidden -PassThru).Id"
+powershell -NoProfile -Command "(Start-Process -FilePath 'C:\Users\david\Desktop\Projects\Ndukego Homes Gallery Project\.freebuff\start-web.cmd' -RedirectStandardOutput 'C:\Users\david\Desktop\Projects\Ndukego Homes Gallery Project\.freebuff\web.log' -RedirectStandardError 'C:\Users\david\Desktop\Projects\Ndukego Homes Gallery Project\.freebuff\web.err.log' -WindowStyle Hidden -PassThru).Id"
 ```
 
 Notes learned the hard way:
+- **PORT=0 pitfall:** this shell environment exports `PORT=0` globally, and
+  `apps/api/src/main.ts` does `process.env.PORT || 4000` — the string "0" is
+  truthy, so the API silently binds an EPHEMERAL port (log prints
+  `localhost:0`). Always launch the API through `.freebuff\start-api.cmd`
+  (which pins `PORT=4000`) or another env-pinning wrapper. The web app is
+  unaffected (`next dev --port 3000` is explicit).
+- Start-Process needs the FULL path to the launcher (`pnpm.cmd` resolved fine
+  from bash but the .cmd launchers must be absolute).
+- The `Start-Process` command may report a tool timeout even when it SUCCEEDS
+  (PowerShell keeps child handles open). Don't relaunch blindly — check
+  `netstat -ano -p TCP | findstr LISTENING` for :4000/:3000 first, or you'll
+  spawn duplicate servers (Next 16 then exits the new one with "Another next
+  dev server is already running").
+- Git Bash mangles `taskkill /PID x /F` — use `taskkill //PID x //T //F`.
 - Next 16 allows only ONE dev server per app directory (`next dev` exits with
   "Another next dev server is already running" otherwise) — you cannot run a
   second web instance on :3100 from the same folder.
 - `pnpm --filter web dev` spawns pnpm → node; kill via the port's PID:
-  `netstat -ano | findstr :3000` then `taskkill /PID <pid> /F`.
+  `netstat -ano | findstr :3000` then `taskkill //PID <pid> //F`.
 - Health checks: `curl http://localhost:3000/` (web, expect 200),
+  `curl http://localhost:4000/api/v1/health` (API, expect 200),
   `curl http://localhost:4000/api/v1/estates/public?limit=1` (API + DB, expect 200).

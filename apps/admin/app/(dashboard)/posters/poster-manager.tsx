@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { mediaUrl as posterImageUrl } from "@/lib/media";
 
 export interface Poster {
   id: string;
@@ -45,14 +46,6 @@ function orientationLabel(w?: number | null, h?: number | null) {
   if (r > 1.05) return "Landscape";
   if (r < 0.95) return "Portrait";
   return "Square";
-}
-
-const API_IMAGE_BASE =
-  process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") ?? "http://localhost:4000";
-
-function posterImageUrl(url: string) {
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  return `${API_IMAGE_BASE}${url}`;
 }
 
 // ─── Upload dialog ───────────────────────────────────────────────────────────

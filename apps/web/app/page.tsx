@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { ArrowRight, Building2, DollarSign, TrendingUp, Users, Phone, CheckCircle } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  DollarSign,
+  TrendingUp,
+  Users,
+  Phone,
+  CheckCircle,
+} from "lucide-react";
 import { publicFetch } from "@/lib/api";
 import type { PropertyCardData } from "@/components/property-card";
 import { HomeHero } from "@/components/home-hero";
@@ -22,6 +30,7 @@ interface Estate {
   availablePlots: number | null;
   coverImageUrl: string | null;
   masterPlanUrl: string | null;
+  buildingTypesConfig: { id: string; name: string }[] | null;
   _count: { properties: number };
 }
 
@@ -97,7 +106,6 @@ export default async function HomePage() {
       <section className="relative py-24">
         <div className="absolute inset-0 bg-white/40 pointer-events-none" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-
           <AnimateIn>
             <div className="mb-14">
               <p className="text-xs font-bold uppercase tracking-widest text-[#A0111C] mb-3">
@@ -122,13 +130,21 @@ export default async function HomePage() {
                     className={`group relative rounded-2xl border ${svc.border} ${svc.bg} p-7 overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md block`}
                   >
                     <div className="flex items-start gap-5">
-                      <div className={`shrink-0 flex h-11 w-11 items-center justify-center rounded-xl ${svc.iconBg}`}>
+                      <div
+                        className={`shrink-0 flex h-11 w-11 items-center justify-center rounded-xl ${svc.iconBg}`}
+                      >
                         <Icon className={`h-5 w-5 ${svc.iconColor}`} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-base font-bold text-gray-900 mb-0.5">{svc.title}</h3>
-                        <p className="text-sm text-gray-500 mb-3">{svc.subtitle}</p>
-                        <p className="text-sm text-gray-500 leading-relaxed mb-4 hidden sm:block">{svc.desc}</p>
+                        <h3 className="text-base font-bold text-gray-900 mb-0.5">
+                          {svc.title}
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-3">
+                          {svc.subtitle}
+                        </p>
+                        <p className="text-sm text-gray-500 leading-relaxed mb-4 hidden sm:block">
+                          {svc.desc}
+                        </p>
                         <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-400 group-hover:text-gray-700 transition-colors">
                           Learn more <ArrowRight className="h-3.5 w-3.5" />
                         </span>
@@ -153,7 +169,6 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-white/40 pointer-events-none" />
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
             <AnimateIn>
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest text-[#A0111C] mb-3">
@@ -166,8 +181,9 @@ export default async function HomePage() {
                   Trust built on transparency and results
                 </h2>
                 <p className="text-gray-500 leading-relaxed mb-8">
-                  We don&apos;t just list properties — we verify every title, inspect every site,
-                  and stay with you through every step of the transaction. That&apos;s the Ndukego standard.
+                  We don&apos;t just list properties — we verify every title,
+                  inspect every site, and stay with you through every step of
+                  the transaction. That&apos;s the Ndukego standard.
                 </p>
                 <div className="space-y-4">
                   {[
@@ -188,15 +204,26 @@ export default async function HomePage() {
 
             <AnimateIn delay={0.15}>
               <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Ready to get started?</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  Ready to get started?
+                </h3>
                 <p className="text-sm text-gray-400 mb-8">
-                  Call us directly or book a session and we&apos;ll connect you with the right opportunity.
+                  Call us directly or book a session and we&apos;ll connect you
+                  with the right opportunity.
                 </p>
 
                 <div className="space-y-3 mb-8">
                   {[
-                    { label: "Call us", number: "+234 803 609 6700", href: "tel:+2348036096700" },
-                    { label: "Alternate", number: "+234 705 295 5555", href: "tel:+2347052955555" },
+                    {
+                      label: "Call us",
+                      number: "+234 803 609 6700",
+                      href: "tel:+2348036096700",
+                    },
+                    {
+                      label: "Alternate",
+                      number: "+234 705 295 5555",
+                      href: "tel:+2347052955555",
+                    },
                   ].map((item) => (
                     <a
                       key={item.href}
@@ -207,7 +234,9 @@ export default async function HomePage() {
                         <Phone className="h-4 w-4 text-[#A0111C]" />
                       </div>
                       <div>
-                        <p className="text-[10px] text-gray-400 uppercase tracking-widest">{item.label}</p>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-widest">
+                          {item.label}
+                        </p>
                         <p className="text-sm font-semibold text-gray-700 group-hover:text-[#A0111C] transition-colors">
                           {item.number}
                         </p>
@@ -224,7 +253,6 @@ export default async function HomePage() {
                 </Link>
               </div>
             </AnimateIn>
-
           </div>
         </div>
       </section>

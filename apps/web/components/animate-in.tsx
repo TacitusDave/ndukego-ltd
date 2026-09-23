@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { useReveal } from "./reveal";
 
 interface AnimateInProps {
   children: ReactNode;
@@ -9,14 +10,21 @@ interface AnimateInProps {
   className?: string;
 }
 
+/**
+ * Scroll-reveal wrapper. Deliberately understated: 14px rise + fade, short
+ * duration, soft deceleration. Replaces the previous floaty 28px bounces —
+ * the goal is enterprise-composed, not cartoonish.
+ */
 export function AnimateIn({ children, delay = 0, className }: AnimateInProps) {
+  const reveal = useReveal(delay);
+
   return (
     <motion.div
+      ref={reveal.ref}
       className={className}
-      initial={{ opacity: 0, y: 28 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.65, delay, ease: "easeOut" }}
+      initial={reveal.initial}
+      animate={reveal.animate}
+      transition={reveal.transition}
     >
       {children}
     </motion.div>

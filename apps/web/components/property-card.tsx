@@ -184,6 +184,7 @@ function MediaSlideshow({ media, alt }: { media: Media[]; alt: string }) {
           key={current!.url}
           src={mediaUrl(current!.url)}
           alt={alt}
+          loading={index === 0 ? "eager" : "lazy"}
           onError={() => setImgFailed((f) => ({ ...f, [index]: true }))}
           className={cn(
             "w-full h-full object-cover transition-transform duration-300",

@@ -1,14 +1,14 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Search, ShieldCheck } from "lucide-react";
+import { ArrowRight, ChevronUp, ChevronDown, Search, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 /* ── Slideshow ─────────────────────────────────────────────
    Background1 always opens each cycle; 2-6 follow in a new
-   random order every cycle (unchanged behavior).
+   random order every cycle.
 ──────────────────────────────────────────────────────────── */
 function generateSequence(): number[] {
   const rest = [2, 3, 4, 5, 6];
@@ -19,8 +19,12 @@ function generateSequence(): number[] {
   return [1, ...rest];
 }
 
-const INTERVAL_MS = 5500;
-const FADE_MS = 1400;
+/* Slide tempo: a touch quicker than before (5.5s → 4.5s); the swipe
+   transition itself is 0.7s — faster than the old 1.4s crossfade. */
+const INTERVAL_MS = 4500;
+const SWIPE_MS = 0.7;
+
+const EASE_SWIPE: [number, number, number, number] = [0.32, 0.72, 0, 1];
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -40,19 +44,35 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
   const sequenceRef = useRef(sequence);
   sequenceRef.current = sequence;
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIdx((prev) => {
-        const next = prev + 1;
-        if (next >= sequenceRef.current.length) {
-          setSequence(generateSequence());
-          return 0;
-        }
-        return next;
-      });
-    }, INTERVAL_MS);
-    return () => clearInterval(timer);
+  const reduceMotion = useReducedMotion();
+
+  const go = useCallback((dir: 1 | -1) => {
+    setIdx((prev) => {
+      const next = prev + dir;
+      if (next < 0) {
+        // Stepping back past the start wraps to the end of the current cycle.
+        return sequenceRef.current.length - 1;
+      }
+      if (next >= sequenceRef.current.length) {
+        setSequence(generateSequence());
+        return 0;
+      }
+      return next;
+    });
   }, []);
+
+  // Auto-advance timer — resets whenever idx changes so manual navigation
+  // (buttons) gets a full fresh interval instead of firing mid-countdown.
+  useEffect(() => {
+    const timer = setInterval(() => go(1), INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [idx, go]);
+
+  // Track swipe direction so the card always enters from where a real swipe
+  // would push it: next → slides in from the right, prev → from the left.
+  const [dir, setDir] = useState<1 | -1>(1);
+  const goNext = useCallback(() => { setDir(1); go(1); }, [go]);
+  const goPrev = useCallback(() => { setDir(-1); go(-1); }, [go]);
 
   const currentBg = `/Background${sequence[idx]}.png`;
 
@@ -60,6 +80,29 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
     e.preventDefault();
     router.push(`/properties${query.trim() ? `?search=${encodeURIComponent(query.trim())}` : ""}`);
   }
+
+  // Swipe transition variants — app-library card push, not a crossfade.
+  const slideVariants = {
+    enter: (d: 1 | -1) =>
+      reduceMotion
+        ? { opacity: 0 }
+        : { x: d === 1 ? "42%" : "-42%", opacity: 0.6, scale: 0.985 },
+    center: {
+      x: "0%",
+      opacity: 1,
+      scale: 1,
+      transition: { duration: SWIPE_MS, ease: EASE_SWIPE },
+    },
+    exit: (d: 1 | -1) =>
+      reduceMotion
+        ? { opacity: 0, transition: { duration: 0.25 } }
+        : {
+            x: d === 1 ? "-42%" : "42%",
+            opacity: 0.6,
+            scale: 0.985,
+            transition: { duration: SWIPE_MS, ease: EASE_SWIPE },
+          },
+  };
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[#faf7f1] via-[#f7f2e9] to-[#f2ebdd] lg:flex lg:min-h-[calc(100svh-64px)]">
@@ -75,7 +118,7 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.5] lg:w-1/2"
+        className="pointer-events-none absolute inset-0 opacity-[0.5] lg:w-3/5"
         style={{
           backgroundImage:
             "linear-gradient(to right, rgba(0,0,0,0.025) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.025) 1px, transparent 1px)",
@@ -83,8 +126,8 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
         }}
       />
 
-      {/* ── LEFT — all text, search, CTAs, stats ── */}
-      <div className="relative z-10 w-full lg:w-[48%]">
+      {/* ── LEFT — text, search, CTAs, stats (≥60% on desktop, centered on mobile) ── */}
+      <div className="relative z-10 flex w-full flex-col items-center text-center lg:w-[60%] lg:block lg:text-left">
         <div className="w-full px-4 pb-2 pt-10 sm:px-6 sm:pt-12 lg:py-10 lg:pl-[max(2rem,calc((100vw-80rem)/2+2rem))] lg:pr-10 xl:pr-14">
 
           {/* Eyebrow label */}
@@ -120,7 +163,7 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
             variants={fadeUp}
             initial="hidden"
             animate="show"
-            className="text-base sm:text-lg text-gray-600 max-w-xl leading-relaxed mb-6"
+            className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto lg:mx-0 leading-relaxed mb-6"
           >
             Ndukego Investment &amp; Properties Ltd delivers verified real estate,
             LPO financing, investment capital, and expert consultancy all under one roof.
@@ -133,7 +176,7 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
             initial="hidden"
             animate="show"
             onSubmit={handleSearch}
-            className="flex gap-2 max-w-xl mb-6"
+            className="flex gap-2 max-w-xl mx-auto lg:mx-0 mb-6"
           >
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -159,7 +202,7 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
             variants={fadeUp}
             initial="hidden"
             animate="show"
-            className="flex flex-wrap items-center gap-4 mb-7"
+            className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mb-7"
           >
             <Link
               href="/properties"
@@ -181,7 +224,7 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
             variants={fadeUp}
             initial="hidden"
             animate="show"
-            className="flex flex-wrap items-center gap-6 sm:gap-10 pt-5 border-t border-gray-200/80 lg:justify-between"
+            className="flex flex-wrap items-center justify-center lg:justify-between gap-6 sm:gap-10 pt-5 border-t border-gray-200/80"
           >
             {[
               { value: totalProperties > 0 ? `${totalProperties}+` : "50+", label: "Verified Listings" },
@@ -197,20 +240,19 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
         </div>
       </div>
 
-      {/* ── RIGHT — slideshow: stacked below the text on small screens,
-          full-height bleed to the right screen edge on desktop ── */}
-      <div className="relative mt-10 pb-12 lg:pb-0 lg:mt-0 lg:absolute lg:inset-y-0 lg:right-0 lg:w-[52%]">
-        {/* Mobile/tablet keeps the framed card; desktop bleeds edge-to-edge */}
+      {/* ── RIGHT — slideshow (40% on desktop; framed card below text on mobile) ── */}
+      <div className="relative mt-10 pb-12 lg:pb-0 lg:mt-0 lg:absolute lg:inset-y-0 lg:right-0 lg:w-[40%]">
         <div className="relative mx-4 overflow-hidden rounded-[1.75rem] shadow-[0_40px_80px_-32px_rgba(93,64,28,0.45)] ring-1 ring-black/10 sm:mx-6 lg:m-0 lg:h-full lg:rounded-none lg:shadow-none lg:ring-0">
-          <div className="relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-full">
+          <div className="relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-full overflow-hidden">
 
-            <AnimatePresence mode="sync">
+            <AnimatePresence initial={false} custom={dir} mode="sync">
               <motion.div
                 key={currentBg}
-                initial={{ opacity: 0, scale: 1.04 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: FADE_MS / 1000, ease: "easeInOut" }}
+                custom={dir}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
                 aria-hidden
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat"
                 style={{ backgroundImage: `url('${currentBg}')` }}
@@ -220,7 +262,7 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
             {/* Legibility + warmth wash */}
             <div
               aria-hidden
-              className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-white/10"
+              className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-white/10 pointer-events-none"
             />
 
             {/* Blend the image's left edge into the background (desktop) */}
@@ -229,8 +271,29 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
               className="absolute inset-y-0 left-0 hidden w-44 bg-gradient-to-r from-[#faf7f1] via-[#faf7f1]/35 to-transparent lg:block"
             />
 
+            {/* ── Vertical prev/next controls — sit on the divider between the
+                text column and the slideshow. Up (previous) / down (next). ── */}
+            <div className="absolute left-0 top-1/2 z-20 -translate-y-1/2 lg:-translate-x-1/2 flex flex-col gap-1.5 pl-3 lg:pl-0">
+              <button
+                type="button"
+                aria-label="Previous image"
+                onClick={(e) => { e.preventDefault(); goPrev(); }}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-[#A0111C] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A0111C]/40"
+              >
+                <ChevronUp className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                aria-label="Next image"
+                onClick={(e) => { e.preventDefault(); goNext(); }}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-[#A0111C] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A0111C]/40"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            </div>
+
             {/* Caption + indicators */}
-            <div className="absolute bottom-0 inset-x-0 p-4 sm:p-6 flex items-end justify-between gap-3">
+            <div className="absolute bottom-0 inset-x-0 p-4 sm:p-6 flex items-end justify-between gap-3 pointer-events-none">
               <div>
                 <p
                   className="text-white font-semibold text-sm sm:text-base drop-shadow-sm"

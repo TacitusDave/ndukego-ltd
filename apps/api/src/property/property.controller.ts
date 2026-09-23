@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -189,13 +190,22 @@ export class PropertyController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Post(':id/media')
   @RequirePermissions('property.update')
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  // Memory storage buffers the whole upload in RAM — cap it at the largest
+  // media this endpoint accepts (50 MB videos) so a runaway upload can never
+  // exhaust the container's memory and take the whole API down.
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 55 * 1024 * 1024 },
+    }),
+  )
   addMedia(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
     @Body() body: { type?: string; title?: string; isCover?: string },
     @CurrentUser() user: AuthenticatedUser,
   ) {
+    if (!file) throw new BadRequestException('No file uploaded');
     return this.propertyService.addMedia(
       id,
       file,

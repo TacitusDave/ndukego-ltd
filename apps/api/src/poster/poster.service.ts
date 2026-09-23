@@ -195,17 +195,15 @@ export class PosterService {
         throw new BadRequestException('Image must be smaller than 5 MB');
       }
 
-      if (poster.imageUrl) {
-        await this.storage
-          .delete(poster.imageUrl.replace('/uploads/', ''))
-          .catch(() => undefined);
-      }
-
       const ext =
         extname(file.originalname) || `.${file.mimetype.split('/')[1]}`;
       const filename = `${uuidv4()}${ext}`;
       const storagePath = `posters/${filename}`;
       await this.storage.store(storagePath, file.buffer);
+
+      // Record first, then best-effort removal of the replaced blob — never
+      // the other way around, or a failure would orphan the poster URL.
+      const previousUrl = poster.imageUrl;
 
       const detected = detectDimensions(file.buffer);
 
@@ -228,6 +226,12 @@ export class PosterService {
               : poster.groupName,
         },
       });
+
+      if (previousUrl && previousUrl !== `/uploads/${storagePath}`) {
+        await this.storage
+          .delete(previousUrl.replace('/uploads/', ''))
+          .catch(() => undefined);
+      }
     } else {
       await this.prisma.poster.update({
         where: { id },

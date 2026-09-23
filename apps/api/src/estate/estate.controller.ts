@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -134,12 +135,18 @@ export class EstateController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Post(':id/site-plan')
   @RequirePermissions('estate.update')
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 25 * 1024 * 1024 },
+    }),
+  )
   uploadSitePlan(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
     @CurrentUser() user: AuthenticatedUser,
   ) {
+    if (!file) throw new BadRequestException('No file uploaded');
     return this.estateService.uploadSitePlan(id, file, user);
   }
 
@@ -157,13 +164,19 @@ export class EstateController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Post(':id/building-type-image/:typeId')
   @RequirePermissions('estate.update')
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 12 * 1024 * 1024 },
+    }),
+  )
   uploadBuildingTypeImage(
     @Param('id') id: string,
     @Param('typeId') typeId: string,
     @UploadedFile() file: Express.Multer.File,
     @CurrentUser() user: AuthenticatedUser,
   ) {
+    if (!file) throw new BadRequestException('No file uploaded');
     return this.estateService.uploadBuildingTypeImage(id, typeId, file, user);
   }
 

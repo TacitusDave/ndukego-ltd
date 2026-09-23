@@ -11,6 +11,12 @@ export interface StoredFile {
   fileSize: number;
 }
 
+/** LRU cache entry. `null` buffer = negative cache (known-missing file). */
+interface CacheEntry {
+  buffer: Buffer | null;
+  bytes: number;
+}
+
 /**
  * Media storage.
  *
@@ -21,12 +27,25 @@ export interface StoredFile {
  *
  * Files uploaded before this change only exist on disk; read() transparently
  * falls back to the local filesystem so legacy media keeps serving.
+ *
+ * Hot media (site plans, covers, cards) is additionally held in a bounded
+ * in-process LRU so property-card grids hit memory instead of re-fetching
+ * multi-megabyte BYTEA rows from Neon on every page render. Absent paths are
+ * negative-cached briefly so a 404 storm cannot hammer the database.
  */
 @Injectable()
 export class StorageService {
   private readonly logger = new Logger(StorageService.name);
   private readonly basePath: string;
   private readonly provider: string;
+
+  /** Bounded LRU of decoded buffers (~300 MB default). */
+  private readonly cache = new Map<string, CacheEntry>();
+  private readonly cacheMaxBytes: number;
+  private cacheBytes = 0;
+  /** Paths confirmed missing; cached so 404s don't hit the DB every time. */
+  private readonly negativeCache = new Map<string, number>();
+  private readonly negativeTtlMs = 30_000;
 
   constructor(
     private readonly config: ConfigService,
@@ -35,6 +54,59 @@ export class StorageService {
     this.provider = this.config.get('STORAGE_PROVIDER') || 'local';
     this.basePath =
       this.config.get('STORAGE_LOCAL_PATH') || './storage/uploads';
+    const mb = Number(this.config.get('STORAGE_CACHE_MB')) || 300;
+    this.cacheMaxBytes = mb * 1024 * 1024;
+  }
+
+  private cacheGet(path: string): Buffer | null | undefined {
+    const negativeAt = this.negativeCache.get(path);
+    if (negativeAt !== undefined) {
+      if (Date.now() - negativeAt < this.negativeTtlMs) return null;
+      this.negativeCache.delete(path);
+    }
+    const hit = this.cache.get(path);
+    if (!hit) return undefined;
+    // LRU touch: re-insert to move to the back of the Map's insertion order.
+    this.cache.delete(path);
+    this.cache.set(path, hit);
+    return hit.buffer;
+  }
+
+  private cacheSet(path: string, buffer: Buffer | null): void {
+    if (buffer === null) {
+      this.negativeCache.set(path, Date.now());
+      return;
+    }
+    // Never cache anything oddly large (guards against pathologic uploads).
+    if (buffer.length > this.cacheMaxBytes) return;
+
+    const existing = this.cache.get(path);
+    if (existing) {
+      this.cacheBytes -= existing.bytes;
+      this.cache.delete(path);
+    }
+
+    // Evict least-recently-used entries (Map iteration = insertion order)
+    // until the new buffer fits.
+    while (this.cacheBytes + buffer.length > this.cacheMaxBytes && this.cache.size > 0) {
+      const oldest = this.cache.keys().next().value as string | undefined;
+      if (oldest === undefined) break;
+      const evicted = this.cache.get(oldest);
+      this.cacheBytes -= evicted?.bytes ?? 0;
+      this.cache.delete(oldest);
+    }
+
+    this.cache.set(path, { buffer, bytes: buffer.length });
+    this.cacheBytes += buffer.length;
+  }
+
+  private cacheDelete(path: string): void {
+    const entry = this.cache.get(path);
+    if (entry) {
+      this.cacheBytes -= entry.bytes;
+      this.cache.delete(path);
+    }
+    this.negativeCache.delete(path);
   }
 
   async store(relativePath: string, buffer: Buffer): Promise<StoredFile> {
@@ -62,10 +134,19 @@ export class StorageService {
       );
     }
 
+    this.cacheSet(relativePath, buffer);
+
     return { storagePath: relativePath, checksum, fileSize: buffer.length };
   }
 
   async read(storagePath: string): Promise<Buffer> {
+    // 0) In-process cache (fast path — no DB round-trip)
+    const cached = this.cacheGet(storagePath);
+    if (cached !== undefined) {
+      if (cached === null) throw new Error(`File not found in storage: ${storagePath}`);
+      return cached;
+    }
+
     // 1) Database (authoritative, survives redeploys)
     const row = await this.prisma.uploadFile
       .findUnique({ where: { path: storagePath } })
@@ -75,7 +156,11 @@ export class StorageService {
         );
         return null;
       });
-    if (row) return Buffer.from(row.data);
+    if (row) {
+      const buffer = Buffer.from(row.data);
+      this.cacheSet(storagePath, buffer);
+      return buffer;
+    }
 
     // 2) Local disk (legacy files uploaded before DB storage)
     if (this.provider === 'local') {
@@ -86,13 +171,17 @@ export class StorageService {
       ];
       for (const dir of legacyDirs) {
         try {
-          return await readFile(join(dir, storagePath));
+          const buffer = await readFile(join(dir, storagePath));
+          this.cacheSet(storagePath, buffer);
+          return buffer;
         } catch {
           // try next location
         }
       }
     }
 
+    // Negative-cache so repeated 404s don't keep hitting the database.
+    this.cacheSet(storagePath, null);
     throw new Error(`File not found in storage: ${storagePath}`);
   }
 
@@ -114,6 +203,7 @@ export class StorageService {
 
   async delete(storagePath: string): Promise<void> {
     await this.prisma.uploadFile.deleteMany({ where: { path: storagePath } });
+    this.cacheDelete(storagePath);
     if (this.provider === 'local') {
       const fullPath = join(this.basePath, storagePath);
       await unlink(fullPath).catch(() => undefined);

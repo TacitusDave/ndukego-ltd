@@ -5,6 +5,28 @@ import { redirect } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1";
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  maxAge: 7 * 24 * 60 * 60,
+  path: "/",
+};
+
+/**
+ * Cookie writes throw outside a request scope (static prerendering,
+ * generateMetadata). A failed refresh must never take the whole render down
+ * with an unhandled exception — degrade to "no session" instead.
+ */
+async function safeSetAccessToken(accessToken: string) {
+  try {
+    const store = await cookies();
+    store.set("access_token", accessToken, COOKIE_OPTIONS);
+  } catch {
+    // Prerender/static context — token simply won't be persisted this render.
+  }
+}
+
 export async function login(email: string, password: string) {
   let res: Response;
   try {
@@ -136,18 +158,17 @@ async function doRefreshSession() {
       cache: "no-store",
     });
   } catch {
+    // Network hiccup — do NOT clear cookies. The session stays put and the
+    // next request retries; previously the cookieJar was left untouched here
+    // (correct) but callers couldn't distinguish network vs auth failures.
     return false;
   }
 
   if (!res.ok) return false;
 
-  const { accessToken } = await res.json();
-  cookieStore.set("access_token", accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60,
-    path: "/",
-  });
+  const { accessToken } = await res.json().catch(() => ({}));
+  if (!accessToken) return false;
+
+  await safeSetAccessToken(accessToken);
   return true;
 }

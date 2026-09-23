@@ -33,14 +33,19 @@ async function tryRefresh(): Promise<string | null> {
   if (!accessToken) return null;
 
   // Persist the fresh access token so subsequent requests in this render
-  // (and the next page view) start with a valid token.
-  cookieStore.set("access_token", accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60,
-    path: "/",
-  });
+  // (and the next page view) start with a valid token. Cookie writes throw
+  // outside a request scope (prerender) — never let that crash the render.
+  try {
+    cookieStore.set("access_token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60,
+      path: "/",
+    });
+  } catch {
+    // Token still returned; only persistence is skipped.
+  }
   return accessToken as string;
 }
 

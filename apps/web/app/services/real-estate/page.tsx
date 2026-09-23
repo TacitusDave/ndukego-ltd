@@ -21,6 +21,8 @@ interface Estate {
   totalPlots: number | null;
   availablePlots: number | null;
   coverImageUrl: string | null;
+  masterPlanUrl: string | null;
+  buildingTypesConfig: { id: string; name: string }[] | null;
   _count: { properties: number };
 }
 

@@ -38,13 +38,17 @@ async function doTryRefresh(): Promise<string | null> {
   const { accessToken } = await res.json().catch(() => ({}));
   if (!accessToken) return null;
 
-  cookieStore.set("access_token", accessToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 7 * 24 * 60 * 60,
-    path: "/",
-  });
+  try {
+    cookieStore.set("access_token", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60,
+      path: "/",
+    });
+  } catch {
+    // Token still returned; only persistence is skipped.
+  }
   return accessToken as string;
 }
 

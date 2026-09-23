@@ -59,15 +59,24 @@
   --font-mono: var(--font-jetbrains-mono, ui-monospace, monospace);
 }
 
-/* ── Thin custom scrollbar (all pages) ── */
+/* ── Scrollbar: native bar hidden; a fading crimson overlay
+      (components/scroll-fade.tsx) appears only while the user is scrolling ── */
+html {
+  scrollbar-width: none;               /* Firefox */
+  -ms-overflow-style: none;            /* legacy Edge */
+}
+html::-webkit-scrollbar { width: 0; height: 0; }  /* WebKit */
+
+/* Keep scrollable *sub-panels* (modals, dropdowns, menus) with a thin bar —
+   only the page-level scrollbar auto-fades. */
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(160,17,28,0.2) transparent;
 }
-::-webkit-scrollbar        { width: 3px; height: 3px; }
-::-webkit-scrollbar-track  { background: transparent; }
-::-webkit-scrollbar-thumb  { background: rgba(160,17,28,0.2); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(160,17,28,0.5); }
+*::-webkit-scrollbar        { width: 3px; height: 3px; }
+*::-webkit-scrollbar-track  { background: transparent; }
+*::-webkit-scrollbar-thumb  { background: rgba(160,17,28,0.2); border-radius: 99px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(160,17,28,0.5); }
 
 /* ── Global background — paper texture ── */
 
@@ -99,6 +108,18 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
+  }
+
+  /* Enterprise motion policy: honor users who opt out of animation. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
   code, pre, kbd { font-family: var(--font-mono); }
 }

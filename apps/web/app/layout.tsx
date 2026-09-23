@@ -6,6 +6,7 @@ import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ConditionalFooter } from "@/components/conditional-footer";
 import { RouteScrollReset, ScrollToTopButton } from "@/components/scroll-to-top";
+import { ScrollFade } from "@/components/scroll-fade";
 import { CookieBanner } from "@/components/cookie-banner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Suspense fallback={null}>
           <RouteScrollReset />
         </Suspense>
+        <ScrollFade />
         <ScrollToTopButton />
         <CookieBanner />
         <SpeedInsights />

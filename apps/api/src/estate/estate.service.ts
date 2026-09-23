@@ -217,17 +217,22 @@ export class EstateService {
 
     const url = `/uploads/estates/${id}/site-plan/${filename}`;
 
-    // Remove old site plan file if it exists
-    if (estate.masterPlanUrl) {
-      await this.storage
-        .delete(estate.masterPlanUrl.replace('/uploads/', ''))
-        .catch(() => undefined);
-    }
+    // Update the record FIRST, then remove the previous file. Deleting before
+    // the DB write meant any failure in between left the estate pointing at a
+    // file that no longer exists — a permanently broken site plan until the
+    // next successful upload. (Orphaned blobs in upload_files are harmless.)
+    const previousPlanUrl = estate.masterPlanUrl;
 
     await this.prisma.estate.update({
       where: { id },
       data: { masterPlanUrl: url },
     });
+
+    if (previousPlanUrl && previousPlanUrl !== url) {
+      await this.storage
+        .delete(previousPlanUrl.replace('/uploads/', ''))
+        .catch(() => undefined);
+    }
 
     return { url };
   }

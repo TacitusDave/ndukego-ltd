@@ -5,6 +5,7 @@ import { ArrowRight, Building2, Trees } from "lucide-react";
 import { motion } from "framer-motion";
 import { PropertyCard, type PropertyCardData } from "@/components/property-card";
 import { EstateCard, type EstateCardData } from "@/components/estate-card";
+import { useReveal } from "@/components/reveal";
 
 /* ────────────────────────── Section ────────────────────────── */
 
@@ -21,6 +22,7 @@ interface HomeFeaturedProps {
 export function HomeFeatured({ properties, estates }: HomeFeaturedProps) {
   const hasProperties = properties.length > 0;
   const hasEstates = estates.length > 0;
+  const header = useReveal();
 
   return (
     <section className="relative py-24">
@@ -28,10 +30,10 @@ export function HomeFeatured({ properties, estates }: HomeFeaturedProps) {
 
         {/* Shared header */}
         <motion.div
-          initial={{ opacity: 0, y: 28 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.65, ease: "easeOut" }}
+          ref={header.ref}
+          initial={header.initial}
+          animate={header.animate}
+          transition={header.transition}
           className="flex flex-wrap items-end justify-between gap-4 mb-14"
         >
           <div>
@@ -68,15 +70,9 @@ export function HomeFeatured({ properties, estates }: HomeFeaturedProps) {
 
             {hasProperties ? (
               properties.map((p, i) => (
-                <motion.div
-                  key={p.id}
-                  initial={{ opacity: 0, y: 28 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-60px" }}
-                  transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" }}
-                >
+                <CardReveal key={p.id} delay={i * 0.06}>
                   <PropertyCard property={p} />
-                </motion.div>
+                </CardReveal>
               ))
             ) : (
               <div className="rounded-2xl border border-dashed border-gray-200 bg-white/60 p-12 text-center">
@@ -101,15 +97,9 @@ export function HomeFeatured({ properties, estates }: HomeFeaturedProps) {
 
             {hasEstates ? (
               estates.map((e, i) => (
-                <motion.div
-                  key={e.id}
-                  initial={{ opacity: 0, y: 28 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: "-60px" }}
-                  transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" }}
-                >
+                <CardReveal key={e.id} delay={i * 0.06}>
                   <EstateCard estate={e} />
-                </motion.div>
+                </CardReveal>
               ))
             ) : (
               <div className="rounded-2xl border border-dashed border-gray-200 bg-white/60 p-12 text-center">
@@ -132,5 +122,21 @@ export function HomeFeatured({ properties, estates }: HomeFeaturedProps) {
         </div>
       </div>
     </section>
+  );
+}
+
+/** Per-card reveal using the shared restrained motion values. */
+function CardReveal({
+  children,
+  delay,
+}: {
+  children: React.ReactNode;
+  delay: number;
+}) {
+  const reveal = useReveal(delay);
+  return (
+    <motion.div ref={reveal.ref} initial={reveal.initial} animate={reveal.animate} transition={reveal.transition}>
+      {children}
+    </motion.div>
   );
 }

@@ -40,7 +40,12 @@ export class PosterController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Post()
   @RequirePermissions('property.create')
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 6 * 1024 * 1024 },
+    }),
+  )
   create(
     @UploadedFile() file: Express.Multer.File,
     @Body()
@@ -59,7 +64,12 @@ export class PosterController {
   @UseGuards(JwtAuthGuard, PermissionsGuard)
   @Patch(':id')
   @RequirePermissions('property.update')
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 6 * 1024 * 1024 },
+    }),
+  )
   update(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File | undefined,

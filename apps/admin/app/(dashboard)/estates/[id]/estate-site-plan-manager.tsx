@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Trash2, Upload, ImagePlus, Loader2, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { updateEstateBuildingTypes } from "@/lib/actions";
-
-const API_IMAGE_BASE = process.env.NEXT_PUBLIC_API_URL?.replace("/api/v1", "") ?? "http://localhost:4000";
+import { mediaUrl } from "@/lib/media";
 
 export interface BuildingType {
   id: string;
@@ -188,7 +187,7 @@ export function EstateSitePlanManager({ estateId, masterPlanUrl, buildingTypes: 
           <div className="rounded-lg border overflow-hidden bg-muted/20">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`${API_IMAGE_BASE}${sitePlanUrl}`}
+              src={mediaUrl(sitePlanUrl)}
               alt="Site plan"
               className="w-full max-h-64 object-contain"
             />
@@ -408,7 +407,7 @@ function BuildingTypeRow({
                   <div key={url} className="relative group rounded-md overflow-hidden border w-24 h-16">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={`${API_IMAGE_BASE}${url}`}
+                      src={mediaUrl(url)}
                       alt=""
                       className="w-full h-full object-cover"
                     />

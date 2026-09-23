@@ -14,6 +14,8 @@ export interface EstateCardData {
   totalPlots: number | null;
   availablePlots: number | null;
   coverImageUrl: string | null;
+  masterPlanUrl?: string | null;
+  buildingTypesConfig?: { id: string; name: string }[] | null;
   _count: { properties: number };
 }
 
@@ -46,6 +48,7 @@ function EstateCover({ src, alt }: { src: string | null; alt: string }) {
       ref={imgRef}
       src={mediaUrl(src)}
       alt={alt}
+      loading="lazy"
       onError={() => setFailed(true)}
       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
     />
@@ -58,6 +61,9 @@ function EstateCover({ src, alt }: { src: string | null; alt: string }) {
  * badge is emerald "Estate", and there is no hover slideshow.
  */
 export function EstateCard({ estate }: { estate: EstateCardData }) {
+  const hasSitePlan =
+    !!estate.masterPlanUrl || !!(estate.buildingTypesConfig && estate.buildingTypesConfig.length > 0);
+
   return (
     <Link
       href={`/estates/${estate.id}`}
@@ -71,6 +77,15 @@ export function EstateCard({ estate }: { estate: EstateCardData }) {
             Estate
           </span>
         </div>
+        {/* Site plan chip — surfaces the interactive master plan on every card. */}
+        {hasSitePlan && (
+          <div className="absolute bottom-3 left-3 z-10">
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/92 px-2.5 py-1 text-[11px] font-semibold text-gray-800 shadow-sm backdrop-blur-sm">
+              <Network className="h-3 w-3 text-emerald-700" />
+              Site plan
+            </span>
+          </div>
+        )}
         {estate.totalPlots != null && (
           <div className="absolute bottom-3 right-3 z-10 rounded-full bg-black/55 px-2.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
             {estate.availablePlots ?? 0}/{estate.totalPlots} plots
