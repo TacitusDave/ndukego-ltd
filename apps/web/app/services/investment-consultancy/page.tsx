@@ -12,7 +12,7 @@ const SERVICES = [
   {
     icon: Target,
     title: "Financial Goal Setting",
-    desc: "We work with you to define clear, measurable financial objectives — whether that's building a property portfolio, funding retirement, or growing business capital.",
+    desc: "We work with you to define clear, measurable financial objectives, whether that's building a property portfolio, funding retirement, or growing business capital.",
   },
   {
     icon: LineChart,
@@ -27,7 +27,7 @@ const SERVICES = [
   {
     icon: BookOpen,
     title: "Financial Education",
-    desc: "We believe informed clients make better decisions. We walk you through every option, term, and risk — no jargon, no pressure.",
+    desc: "We believe informed clients make better decisions. We walk you through every option, term, and risk; no jargon, no pressure.",
   },
 ];
 
@@ -43,7 +43,7 @@ const WHO_WE_SERVE = [
 const PROCESS = [
   { step: "01", title: "Discovery Call", desc: "A free 30-minute session to understand your financial situation, goals, and timeline." },
   { step: "02", title: "Analysis & Strategy", desc: "We assess your current position and prepare a tailored investment roadmap with specific recommendations." },
-  { step: "03", title: "Proposal Review", desc: "We walk you through the strategy together — every recommendation is explained and any option can be adjusted." },
+  { step: "03", title: "Proposal Review", desc: "We walk you through the strategy together, every recommendation is explained and any option can be adjusted." },
   { step: "04", title: "Ongoing Advisory", desc: "For retained clients, we provide quarterly reviews, market updates, and portfolio rebalancing as needed." },
 ];
 
@@ -91,7 +91,7 @@ export default function InvestmentConsultancyPage() {
               const Icon = svc.icon;
               return (
                 <AnimateIn key={svc.title} delay={i * 0.07}>
-                  <div className="flex gap-5 rounded-2xl border border-gray-100 bg-white/80 p-6 shadow-sm h-full">
+                  <div className="flex gap-5 border border-gray-100 bg-white/80 p-6 shadow-sm h-full">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#A0111C]/8">
                       <Icon className="h-5 w-5 text-[#A0111C]" />
                     </div>
