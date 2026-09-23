@@ -51,7 +51,7 @@ const SERVICES = [
     border: "border-blue-100 hover:border-blue-200",
     iconBg: "bg-blue-100",
     iconColor: "text-blue-600",
-    desc: "Access working capital against your Local Purchase Orders and government contracts — quick approval, competitive terms.",
+    desc: "Access working capital against your Local Purchase Orders and government contracts quick approval, competitive terms.",
   },
   {
     icon: TrendingUp,

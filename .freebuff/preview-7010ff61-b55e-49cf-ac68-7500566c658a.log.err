@@ -1,0 +1,35 @@
+npm notice run web@0.1.0 dev
+npm notice run next dev --port 3000
+⚠ Server is approaching the used memory threshold, restarting...
+
+thread 'tokio-runtime-worker' (37508) panicked at turbopack\crates\turbo-tasks-backend\src\backend\operation\mod.rs:966:13:
+Every task must have a task type TaskGuard { task_id: TaskId { id: 2147484224 }, storage: TaskStorage { leaf_distance: LeafDistance { distance: 0, max_distance_in_buffer: 0 }, aggregation_number: AggregationNumber { base: 0, distance: 0, effective: 0 }, output_dependent: {}, output: None, upper: CounterMap({}), persistent_task_type: None, flags: TaskFlags { .0: 24, invalidator: false, immutable: false, current_session_clean: false, meta_restored: true, data_restored: true, meta_modified: false, data_modified: false, meta_snapshot: false, data_snapshot: false, prefetched: false, stateful: false }, lazy: [InProgress(Scheduled { done_event: Event, reason: ActivateInitial })] } }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'tokio-runtime-worker' (6652) panicked at turbopack\crates\turbo-tasks-backend\src\backend\operation\mod.rs:966:13:
+Every task must have a task type TaskGuard { task_id: TaskId { id: 2147484239 }, storage: TaskStorage { leaf_distance: LeafDistance { distance: 0, max_distance_in_buffer: 0 }, aggregation_number: AggregationNumber { base: 0, distance: 0, effective: 0 }, output_dependent: {}, output: None, upper: CounterMap({}), persistent_task_type: None, flags: TaskFlags { .0: 24, invalidator: false, immutable: false, current_session_clean: false, meta_restored: true, data_restored: true, meta_modified: false, data_modified: false, meta_snapshot: false, data_snapshot: false, prefetched: false, stateful: false }, lazy: [InProgress(Scheduled { done_event: Event, reason: ActivateInitial })] } }
+⨯ ReferenceError: PropertiesViewPill is not defined
+    at PropertiesPage (app\properties\page.tsx:293:16)
+  291 |                 layoutId makes the red selection pill glide between List and Map. */}
+  292 |             <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-...
+> 293 |               <PropertiesViewPill active={!isMapView} href={`/properties?${buildQueryStri...
+      |                ^
+  294 |                 <LayoutGrid className="h-3.5 w-3.5" />
+  295 |                 List
+  296 |               </PropertiesViewPill> {
+  digest: '166472434'
+}
+⨯ ReferenceError: PropertiesViewPill is not defined
+    at PropertiesPage (app\properties\page.tsx:293:16)
+  291 |                 layoutId makes the red selection pill glide between List and Map. */}
+  292 |             <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-...
+> 293 |               <PropertiesViewPill active={!isMapView} href={`/properties?${buildQueryStri...
+      |                ^
+  294 |                 <LayoutGrid className="h-3.5 w-3.5" />
+  295 |                 List
+  296 |               </PropertiesViewPill> {
+  digest: '166472434'
+}
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Server is approaching the used memory threshold, restarting...
+⚠ Turbopack's filesystem cache has been deleted because we previously detected an internal error in Turbopack. Builds or page loads may be slower as a result.

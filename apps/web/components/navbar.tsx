@@ -103,7 +103,7 @@ export function Navbar() {
             <Link
               href="/"
               onClick={close}
-              aria-label="Ndukego Investment & Properties — Home"
+              aria-label="Ndukego Investment & Properties Ltd - Home"
               className="group flex h-10 items-center gap-2.5"
             >
               <LogoIcon
@@ -134,7 +134,7 @@ export function Navbar() {
                 <Link
                   href="/account"
                   title="My Account"
-                  className="flex h-9 items-center gap-2 rounded-full bg-gray-900 pl-3 pr-4 text-[13px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#A0111C]"
+                  className="flex h-9 items-center gap-2 rounded-full bg-gray-600 pl-3 pr-4 text-[13px] font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#A0111C]"
                 >
                   <User className="h-4 w-4 opacity-80" />
                   <span className="max-w-[140px] truncate">{sessionUser.firstName}</span>
