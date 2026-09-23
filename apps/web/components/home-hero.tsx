@@ -241,7 +241,31 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
       </div>
 
       {/* ── RIGHT — slideshow (40% on desktop; framed card below text on mobile) ── */}
-      <div className="relative mt-10 pb-12 lg:pb-0 lg:mt-0 lg:absolute lg:inset-y-0 lg:right-0 lg:w-[40%]">
+      <div className="relative mt-10 lg:mt-0 lg:absolute lg:inset-y-0 lg:right-0 lg:w-[40%]">
+
+        {/* ── Vertical prev/next controls — sit ON the divider between the text
+            column and the slideshow. They live OUTSIDE the clipping card below
+            (which is overflow-hidden), so the half that overhangs the image
+            edge is never cut off. Up (previous) / down (next). ── */}
+        <div className="absolute left-4 top-1/2 z-30 -translate-y-1/2 lg:left-0 lg:-translate-x-1/2 flex flex-col gap-1.5">
+          <button
+            type="button"
+            aria-label="Previous image"
+            onClick={(e) => { e.preventDefault(); goPrev(); }}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-[#A0111C] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A0111C]/40"
+          >
+            <ChevronUp className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Next image"
+            onClick={(e) => { e.preventDefault(); goNext(); }}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-[#A0111C] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A0111C]/40"
+          >
+            <ChevronDown className="h-4 w-4" />
+          </button>
+        </div>
+
         <div className="relative mx-4 overflow-hidden rounded-[1.75rem] shadow-[0_40px_80px_-32px_rgba(93,64,28,0.45)] ring-1 ring-black/10 sm:mx-6 lg:m-0 lg:h-full lg:rounded-none lg:shadow-none lg:ring-0">
           <div className="relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-full overflow-hidden">
 
@@ -270,27 +294,6 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
               aria-hidden
               className="absolute inset-y-0 left-0 hidden w-44 bg-gradient-to-r from-[#faf7f1] via-[#faf7f1]/35 to-transparent lg:block"
             />
-
-            {/* ── Vertical prev/next controls — sit on the divider between the
-                text column and the slideshow. Up (previous) / down (next). ── */}
-            <div className="absolute left-0 top-1/2 z-20 -translate-y-1/2 lg:-translate-x-1/2 flex flex-col gap-1.5 pl-3 lg:pl-0">
-              <button
-                type="button"
-                aria-label="Previous image"
-                onClick={(e) => { e.preventDefault(); goPrev(); }}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-[#A0111C] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A0111C]/40"
-              >
-                <ChevronUp className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                aria-label="Next image"
-                onClick={(e) => { e.preventDefault(); goNext(); }}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-[#A0111C] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A0111C]/40"
-              >
-                <ChevronDown className="h-4 w-4" />
-              </button>
-            </div>
 
             {/* Caption + indicators */}
             <div className="absolute bottom-0 inset-x-0 p-4 sm:p-6 flex items-end justify-between gap-3 pointer-events-none">
