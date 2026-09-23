@@ -165,6 +165,14 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
           <LogOut className="h-4 w-4 shrink-0 text-[#5A5A5A] group-hover:text-[#9A9A9A] transition-colors" />
           {isPending ? "Signing out…" : "Sign out"}
         </button>
+
+        {/* Build identity — makes a stale deployment instantly visible. */}
+        <p
+          className="px-3 pt-1 text-[9px] font-mono text-[#3A3A3A] select-none"
+          title="Deployed build. If this doesn't match the latest commit on main, the deploy pipeline is broken."
+        >
+          build {process.env.NEXT_PUBLIC_BUILD_VERSION ?? "dev"}
+        </p>
       </div>
     </aside>
   );
