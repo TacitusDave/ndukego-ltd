@@ -22,7 +22,7 @@ const NAV_LINKS = [
     ],
   },
   { label: "Properties", href: "/properties" },
-  { label: "Estates", href: "/estates" },
+  { label: "Gallery", href: "/gallery" },
   { label: "Projects", href: "/projects" },
   { label: "Insights", href: "/insights" },
   { label: "Contact", href: "/contact" },

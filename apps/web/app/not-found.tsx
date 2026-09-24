@@ -8,7 +8,7 @@ export default function NotFound() {
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4 py-24">
       <div className="max-w-md rounded-2xl border border-gray-200 bg-white/80 p-10 text-center shadow-sm">
-        <p className="text-xs font-bold uppercase tracking-widest text-[#A0111C] mb-3">
+        <p className="text-9xl font-bold uppercase tracking-widest text-[#A0111C] mb-3">
           404
         </p>
         <p
@@ -18,8 +18,7 @@ export default function NotFound() {
           Page not found
         </p>
         <p className="mt-2 text-sm text-gray-500">
-          The page you&apos;re looking for doesn&apos;t exist or may have
-          moved.
+          The page you&apos;re looking for doesn&apos;t exist or may have moved.
         </p>
         <Link
           href="/"

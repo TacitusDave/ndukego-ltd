@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, ChevronUp, ChevronDown, Search, ShieldCheck } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Search, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 
@@ -18,6 +18,9 @@ function generateSequence(): number[] {
   }
   return [1, ...rest];
 }
+
+// Deterministic first render — see the hydration note in HomeHero below.
+const INITIAL_SEQUENCE: number[] = [1, 2, 3, 4, 5, 6];
 
 /* Slide tempo: a touch quicker than before (5.5s → 4.5s); the swipe
    transition itself is 0.7s — faster than the old 1.4s crossfade. */
@@ -39,7 +42,9 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
 
-  const [sequence, setSequence] = useState<number[]>(() => generateSequence());
+  // Deterministic on the server AND the client's first render — randomizing
+  // happens after hydration (see the effect below) and on every cycle wrap.
+  const [sequence, setSequence] = useState<number[]>(INITIAL_SEQUENCE);
   const [idx, setIdx] = useState(0);
   const sequenceRef = useRef(sequence);
   sequenceRef.current = sequence;
@@ -67,6 +72,13 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
     const timer = setInterval(() => go(1), INTERVAL_MS);
     return () => clearInterval(timer);
   }, [idx, go]);
+
+  // Client-only: once hydrated, reshuffle so the first cycle is random too.
+  // Slides after index 0 change order, but the displayed slide (Background1)
+  // is untouched — no visual jump, no server/client mismatch.
+  useEffect(() => {
+    setSequence(generateSequence());
+  }, []);
 
   // Track swipe direction so the card always enters from where a real swipe
   // would push it: next → slides in from the right, prev → from the left.
@@ -116,9 +128,11 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
             "radial-gradient(45% 50% at 8% 85%, rgba(93,122,95,0.07) 0%, transparent 60%), radial-gradient(40% 40% at 30% 10%, rgba(160,17,28,0.04) 0%, transparent 60%)",
         }}
       />
+
+      {/* Mobile: the original plain grid, untouched (map grid is desktop-only) */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.5] lg:w-3/5"
+        className="pointer-events-none absolute inset-0 opacity-[0.5] lg:hidden"
         style={{
           backgroundImage:
             "linear-gradient(to right, rgba(0,0,0,0.025) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.025) 1px, transparent 1px)",
@@ -126,9 +140,27 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
         }}
       />
 
-      {/* ── LEFT — text, search, CTAs, stats (≥60% on desktop, centered on mobile) ── */}
-      <div className="relative z-10 flex w-full flex-col items-center text-center lg:w-[60%] lg:block lg:text-left">
-        <div className="w-full px-4 pb-2 pt-10 sm:px-6 sm:pt-12 lg:py-10 lg:pl-[max(2rem,calc((100vw-80rem)/2+2rem))] lg:pr-10 xl:pr-14">
+      {/* Desktop: map grid — fine minor lines every 56px with bolder major
+          lines every 280px (like map coordinates), tinted the brand brown and
+          faded radially so it dissolves into the background instead of
+          ending in a hard edge. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 left-0 hidden w-3/5 lg:block"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(93,64,28,0.22) 1px, transparent 1px), linear-gradient(to bottom, rgba(93,64,28,0.22) 1px, transparent 1px), linear-gradient(to right, rgba(0,0,0,0.09) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.09) 1px, transparent 1px)",
+          backgroundSize: "280px 280px, 280px 280px, 56px 56px, 56px 56px",
+          maskImage: "radial-gradient(110% 110% at 35% 45%, black 55%, transparent 100%)",
+          WebkitMaskImage: "radial-gradient(110% 110% at 35% 45%, black 55%, transparent 100%)",
+        }}
+      />
+
+      {/* ── LEFT — text, search, CTAs, stats (≥60% on desktop, centered on mobile) ──
+          Desktop: the whole block is vertically centered against the full-height
+          slideshow. Mobile keeps its natural top-flow, untouched. ── */}
+      <div className="relative z-10 flex w-full flex-col items-center text-center lg:w-[60%] lg:justify-center">
+        <div className="w-full px-4 pb-2 pt-10 sm:px-6 sm:pt-12 lg:px-10 xl:px-14 lg:py-10">
 
           {/* Eyebrow label */}
           <motion.div custom={0} variants={fadeUp} initial="hidden" animate="show" className="mb-4">
@@ -163,7 +195,7 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
             variants={fadeUp}
             initial="hidden"
             animate="show"
-            className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto lg:mx-0 leading-relaxed mb-6"
+            className="text-base sm:text-lg text-gray-600 max-w-xl mx-auto leading-relaxed mb-6"
           >
             Ndukego Investment &amp; Properties Ltd delivers verified real estate,
             LPO financing, investment capital, and expert consultancy all under one roof.
@@ -176,7 +208,7 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
             initial="hidden"
             animate="show"
             onSubmit={handleSearch}
-            className="flex gap-2 max-w-xl mx-auto lg:mx-0 mb-6"
+            className="flex gap-2 max-w-xl mx-auto mb-6"
           >
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -202,7 +234,7 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
             variants={fadeUp}
             initial="hidden"
             animate="show"
-            className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mb-7"
+            className="flex flex-wrap items-center justify-center gap-4 mb-7"
           >
             <Link
               href="/properties"
@@ -224,12 +256,12 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
             variants={fadeUp}
             initial="hidden"
             animate="show"
-            className="flex flex-wrap items-center justify-center lg:justify-between gap-6 sm:gap-10 pt-5 border-t border-gray-200/80"
+            className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 pt-5 border-t border-gray-200/80"
           >
             {[
               { value: totalProperties > 0 ? `${totalProperties}+` : "50+", label: "Verified Listings" },
               { value: "10+", label: "Years in Nigeria" },
-              { value: "₦500M+", label: "Properties Transacted" },
+              { value: "20K", label: "Properties Transacted" },
             ].map((stat) => (
               <div key={stat.label} className="space-y-0.5">
                 <p className="text-xl sm:text-2xl font-bold text-gray-900 tabular-nums">{stat.value}</p>
@@ -243,10 +275,11 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
       {/* ── RIGHT — slideshow (40% on desktop; framed card below text on mobile) ── */}
       <div className="relative mt-10 lg:mt-0 lg:absolute lg:inset-y-0 lg:right-0 lg:w-[40%]">
 
-        {/* ── Vertical prev/next controls — sit ON the divider between the text
-            column and the slideshow. They live OUTSIDE the clipping card below
-            (which is overflow-hidden), so the half that overhangs the image
-            edge is never cut off. Up (previous) / down (next). ── */}
+        {/* ── Prev/next controls — sit ON the divider between the text column
+            and the slideshow. They live OUTSIDE the clipping card below (which
+            is overflow-hidden), so the half that overhangs the image edge is
+            never cut off. Left arrow = previous, right arrow = next (matching
+            the horizontal swipe direction). ── */}
         <div className="absolute left-4 top-1/2 z-30 -translate-y-1/2 lg:left-0 lg:-translate-x-1/2 flex flex-col gap-1.5">
           <button
             type="button"
@@ -254,7 +287,7 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
             onClick={(e) => { e.preventDefault(); goPrev(); }}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-[#A0111C] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A0111C]/40"
           >
-            <ChevronUp className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             type="button"
@@ -262,7 +295,7 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
             onClick={(e) => { e.preventDefault(); goNext(); }}
             className="flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-gray-700 shadow-md backdrop-blur-sm transition-all duration-200 hover:bg-[#A0111C] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A0111C]/40"
           >
-            <ChevronDown className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4" />
           </button>
         </div>
 
@@ -283,32 +316,14 @@ export function HomeHero({ totalProperties }: { totalProperties: number }) {
               />
             </AnimatePresence>
 
-            {/* Legibility + warmth wash */}
+            {/* Caption legibility wash (bottom only — no white cast on the image) */}
             <div
               aria-hidden
-              className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-white/10 pointer-events-none"
-            />
-
-            {/* Blend the image's left edge into the background (desktop) */}
-            <div
-              aria-hidden
-              className="absolute inset-y-0 left-0 hidden w-44 bg-gradient-to-r from-[#faf7f1] via-[#faf7f1]/35 to-transparent lg:block"
+              className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent pointer-events-none"
             />
 
             {/* Caption + indicators */}
             <div className="absolute bottom-0 inset-x-0 p-4 sm:p-6 flex items-end justify-between gap-3 pointer-events-none">
-              <div>
-                <p
-                  className="text-white font-semibold text-sm sm:text-base drop-shadow-sm"
-                  style={{ fontFamily: "var(--font-display)" }}
-                >
-                  Featured homes &amp; developments
-                </p>
-                <p className="text-white/80 text-[11px] sm:text-xs mt-0.5 flex items-center gap-1.5">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-300" />
-                  Verified &amp; inspection-cleared
-                </p>
-              </div>
               <div className="flex items-center gap-1.5 pb-1">
                 {sequence.map((_, i) => (
                   <span

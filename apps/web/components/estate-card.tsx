@@ -85,7 +85,7 @@ export function EstateCard({ estate }: { estate: EstateCardData }) {
 
   return (
     <Link
-      href={`/estates/${estate.id}`}
+      href={`/services/real-estate/estates/${estate.id}`}
       className="group flex flex-col rounded-2xl overflow-hidden border border-gray-100 bg-card shadow-[0_1px_2px_rgba(16,24,40,0.04)] hover:shadow-[0_20px_44px_-20px_rgba(16,24,40,0.28)] hover:-translate-y-0.5 transition-all duration-300"
     >
       {/* Cover */}

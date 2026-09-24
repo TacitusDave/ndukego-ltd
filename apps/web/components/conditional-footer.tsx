@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 
 /** Exact routes that render without the site footer. */
-const FOOTERLESS_ROUTES = ["/login", "/register"];
+const FOOTERLESS_ROUTES = ["/login", "/register", "/gallery"];
 
 /** Route prefixes (with their sub-pages) that render without the footer. */
 const FOOTERLESS_PREFIXES = ["/properties", "/account"];

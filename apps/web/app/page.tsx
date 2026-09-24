@@ -127,7 +127,7 @@ export default async function HomePage() {
                 <AnimateIn key={svc.href} delay={i * 0.08}>
                   <Link
                     href={svc.href}
-                    className={`group relative rounded-2xl border ${svc.border} ${svc.bg} p-7 overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md block`}
+                    className={`group relative rounded border ${svc.border} ${svc.bg} p-7 overflow-hidden transition-all duration-300 shadow-sm hover:shadow-md block`}
                   >
                     <div className="flex items-start gap-5">
                       <div

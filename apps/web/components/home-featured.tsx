@@ -112,7 +112,7 @@ export function HomeFeatured({ properties, estates }: HomeFeaturedProps) {
             )}
 
             <Link
-              href="/estates"
+              href="/services/real-estate"
               className="group flex items-center justify-center gap-2 rounded-2xl border border-dashed border-[#A0111C]/25 bg-[#A0111C]/[0.03] px-5 py-4 text-sm font-semibold text-[#A0111C] hover:bg-[#A0111C]/[0.07] hover:border-[#A0111C]/40 transition-all duration-200"
             >
               View all estates

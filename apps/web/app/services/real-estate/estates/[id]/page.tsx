@@ -92,9 +92,18 @@ export default async function EstateDetailPage({
       <section className="relative py-24 pt-28">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <AnimateIn>
-            <p className="text-xs font-bold uppercase tracking-widest text-[#C1121F] mb-4">
-              Estate
-            </p>
+            <div className="flex items-center gap-2 mb-4">
+              <Link
+                href="/services/real-estate"
+                className="text-xs font-bold uppercase tracking-widest text-[#C1121F] hover:underline"
+              >
+                Real Estate
+              </Link>
+              <span className="text-xs text-gray-300">/</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                Estate
+              </span>
+            </div>
             <h1
               className="text-4xl sm:text-5xl font-bold text-gray-900 leading-tight mb-4"
               style={{ fontFamily: "var(--font-display)" }}

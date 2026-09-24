@@ -2,18 +2,6 @@ import Link from "next/link";
 import { Phone, Mail, MapPin, ArrowRight } from "lucide-react";
 import { LogoIcon } from "@nhgp/assets";
 import { DynamicYear } from "./dynamic-year";
-import { publicFetch } from "@/lib/api";
-
-interface FooterEstate {
-  id: string;
-  name: string;
-  state: string;
-}
-
-interface EstatesResponse {
-  items: FooterEstate[];
-  meta: { total: number };
-}
 
 /* ── Social media icons ────────────────────────────────── */
 
@@ -82,12 +70,12 @@ const SERVICES = [
   { label: "Investment Consultancy", href: "/services/investment-consultancy" },
 ];
 
-const PROPERTIES = [
+const EXPLORE = [
   { label: "All Properties", href: "/properties" },
-  { label: "Residential", href: "/properties?type=RESIDENTIAL" },
-  { label: "Commercial", href: "/properties?type=COMMERCIAL" },
-  { label: "Land & Plots", href: "/properties?category=LAND" },
-  { label: "Our Estates", href: "/estates" },
+  { label: "Our Estates", href: "/services/real-estate" },
+  { label: "Gallery", href: "/gallery" },
+  { label: "Projects", href: "/projects" },
+  { label: "Insights", href: "/insights" },
 ];
 
 const COMPANY = [
@@ -97,9 +85,7 @@ const COMPANY = [
   { label: "Terms of Service", href: "/terms" },
 ];
 
-export async function Footer() {
-  const estatesRes = await publicFetch<EstatesResponse>("/estates/public?limit=5");
-  const liveEstates = estatesRes.data?.items ?? [];
+export function Footer() {
   return (
     <footer>
       {/* ── Main section ── */}
@@ -121,6 +107,10 @@ export async function Footer() {
                   >
                     Ndukego Investment<br />
                     &amp; Properties Ltd
+                  </p>
+                  {/* Registered company identifier */}
+                  <p className="mt-1 text-xs font-medium tracking-wide text-gray-400">
+                    RC 1164064
                   </p>
                 </div>
               </div>
@@ -188,7 +178,8 @@ export async function Footer() {
 
             {/* Links — 7 of 12 */}
             <div className="lg:col-span-7">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-8">
+
                 {/* Services */}
                 <div className="space-y-4">
                   <h4 className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
@@ -205,43 +196,19 @@ export async function Footer() {
                   </ul>
                 </div>
 
-                {/* Properties */}
+                {/* Explore — properties, estates (inside Real Estate), gallery, projects */}
                 <div className="space-y-4">
                   <h4 className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
-                    Properties
+                    Explore
                   </h4>
                   <ul className="space-y-2.5">
-                    {PROPERTIES.map((p) => (
-                      <li key={p.href}>
+                    {EXPLORE.map((p) => (
+                      <li key={p.label}>
                         <Link href={p.href} className="text-sm text-gray-600 hover:text-[#A0111C] transition-colors">
                           {p.label}
                         </Link>
                       </li>
                     ))}
-                  </ul>
-                </div>
-
-                {/* Our Estates — live data */}
-                <div className="space-y-4">
-                  <h4 className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
-                    Our Estates
-                  </h4>
-                  <ul className="space-y-2.5">
-                    <li>
-                      <Link href="/estates" className="text-sm text-gray-600 hover:text-[#A0111C] transition-colors">
-                        All Estates
-                      </Link>
-                    </li>
-                    {liveEstates.map((e) => (
-                      <li key={e.id}>
-                        <Link href={`/estates/${e.id}`} className="text-sm text-gray-600 hover:text-[#A0111C] transition-colors">
-                          {e.name}
-                        </Link>
-                      </li>
-                    ))}
-                    {liveEstates.length === 0 && (
-                      <li className="text-sm text-gray-400 italic">Coming soon</li>
-                    )}
                   </ul>
                 </div>
 
@@ -280,8 +247,8 @@ export async function Footer() {
       {/* ── Bottom bar ── */}
       <div className="bg-gray-900 py-4">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-gray-500">
-            © <DynamicYear /> Ndukego Investment &amp; Properties Limited. All rights reserved.
+          <p className="text-xs text-gray-500 text-center sm:text-left">
+            © <DynamicYear /> Ndukego Investment &amp; Properties Limited (RC 1164064). All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-xs text-gray-500">
             <Link href="/terms" className="hover:text-gray-300 transition-colors">Terms of Service</Link>

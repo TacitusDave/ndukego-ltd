@@ -46,12 +46,15 @@ export async function publicFetch<T>(
   return { data, error: null };
 }
 
-export interface PublicPoster {
+export interface PublicGalleryItem {
   id: string;
   title: string | null;
   description: string | null;
   imageUrl: string | null;
   linkUrl: string | null;
+  type?: string | null; // IMAGE | VIDEO | COLLAGE (legacy rows may be null)
+  mediaUrl?: string | null;
+  posterFrameUrl?: string | null;
   width?: number | null;
   height?: number | null;
   groupName?: string | null;
@@ -59,10 +62,10 @@ export interface PublicPoster {
   createdAt: string;
 }
 
-export async function fetchPosters(): Promise<{ data: PublicPoster[] | null; error: string | null }> {
+export async function fetchGalleryItems(): Promise<{ data: PublicGalleryItem[] | null; error: string | null }> {
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}/posters/public`, {
+    res = await fetch(`${API_BASE}/gallery/public`, {
       cache: "no-store",
     });
   } catch {
@@ -77,6 +80,6 @@ export async function fetchPosters(): Promise<{ data: PublicPoster[] | null; err
     return { data: null, error: message };
   }
 
-  const data: PublicPoster[] = await res.json();
+  const data: PublicGalleryItem[] = await res.json();
   return { data, error: null };
 }

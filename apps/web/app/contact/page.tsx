@@ -52,7 +52,9 @@ export default async function ContactPage({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const params = await searchParams;
-  const defaultMessage = params.message ? decodeURIComponent(params.message) : undefined;
+  const defaultMessage = params.message
+    ? decodeURIComponent(params.message)
+    : undefined;
 
   return (
     <>
@@ -81,7 +83,6 @@ export default async function ContactPage({
       <section className="relative pb-24">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-
             {/* ── Left: contact info + map ── */}
             <AnimateIn>
               <div className="space-y-8">
@@ -100,17 +101,28 @@ export default async function ContactPage({
                             <a
                               key={item.text}
                               href={item.href}
-                              target={item.href.startsWith("http") ? "_blank" : undefined}
-                              rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                              target={
+                                item.href.startsWith("http")
+                                  ? "_blank"
+                                  : undefined
+                              }
+                              rel={
+                                item.href.startsWith("http")
+                                  ? "noopener noreferrer"
+                                  : undefined
+                              }
                               className="block text-sm text-gray-700 hover:text-[#A0111C] transition-colors leading-snug"
                             >
                               {item.text}
                             </a>
                           ) : (
-                            <p key={item.text} className="text-sm text-gray-500 leading-snug">
+                            <p
+                              key={item.text}
+                              className="text-sm text-gray-500 leading-snug"
+                            >
                               {item.text}
                             </p>
-                          )
+                          ),
                         )}
                       </div>
                     </div>
@@ -154,12 +166,12 @@ export default async function ContactPage({
                   Send us a message
                 </h2>
                 <p className="text-sm text-gray-400 mb-6">
-                  Fill in the form below and we&apos;ll get back to you within one business day.
+                  Fill in the form below and we&apos;ll get back to you within
+                  one business day.
                 </p>
                 <InquiryForm defaultMessage={defaultMessage} />
               </div>
             </AnimateIn>
-
           </div>
         </div>
       </section>
