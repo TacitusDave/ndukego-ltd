@@ -44,8 +44,7 @@ Think:
 Financial institutions
 Luxury automotive brands
 Enterprise software
-Modern architecture
-2. Premium
+Modern architecture 2. Premium
 
 Properties are expensive.
 
