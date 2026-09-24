@@ -19,7 +19,16 @@ export interface EstateCardData {
   _count: { properties: number };
 }
 
-function EstateCover({ src, alt }: { src: string | null; alt: string }) {
+function EstateCover({
+  src,
+  alt,
+  contain = false,
+}: {
+  src: string | null;
+  alt: string;
+  /** Site plans are diagrams — render them padded and uncropped. */
+  contain?: boolean;
+}) {
   const [failed, setFailed] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -50,7 +59,11 @@ function EstateCover({ src, alt }: { src: string | null; alt: string }) {
       alt={alt}
       loading="lazy"
       onError={() => setFailed(true)}
-      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+      className={
+        contain
+          ? "w-full h-full object-contain p-3 bg-white group-hover:scale-[1.03] transition-transform duration-300"
+          : "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+      }
     />
   );
 }
@@ -64,6 +77,12 @@ export function EstateCard({ estate }: { estate: EstateCardData }) {
   const hasSitePlan =
     !!estate.masterPlanUrl || !!(estate.buildingTypesConfig && estate.buildingTypesConfig.length > 0);
 
+  // The uploaded site plan IS estate imagery: when no cover photo exists,
+  // show the plan itself as the card cover (padded, uncropped) so estates
+  // never render a blank "No image yet" frame when a plan was uploaded.
+  const coverSrc = estate.coverImageUrl ?? estate.masterPlanUrl ?? null;
+  const coverIsPlan = !estate.coverImageUrl && !!estate.masterPlanUrl;
+
   return (
     <Link
       href={`/estates/${estate.id}`}
@@ -71,7 +90,11 @@ export function EstateCard({ estate }: { estate: EstateCardData }) {
     >
       {/* Cover */}
       <div className="relative aspect-[16/10] bg-muted overflow-hidden">
-        <EstateCover src={estate.coverImageUrl} alt={estate.name} />
+        <EstateCover
+          src={coverSrc}
+          alt={coverIsPlan ? `Site plan — ${estate.name}` : estate.name}
+          contain={coverIsPlan}
+        />
         <div className="absolute top-3 left-3 z-10">
           <span className="rounded-lg bg-emerald-700/90 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
             Estate

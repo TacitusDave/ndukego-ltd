@@ -40,10 +40,32 @@ function dimensionLabel(p: PublicPoster): string | null {
   return `${w}×${h}`;
 }
 
-/** Aspect-ratio CSS value for the flexible card frame. */
-function aspectStyle(p: PublicPoster): string {
-  if (p.width && p.height) return `${p.width} / ${p.height}`;
-  return "4 / 5"; // sensible default for posters without metadata
+/**
+ * One shared aspect ratio per group so every row stays perfectly aligned.
+ * If all posters in the group share the same shape (±2%), use it; otherwise
+ * fall back to a portrait poster frame and crop outliers with object-cover.
+ */
+function groupAspect(ps: PublicPoster[]): string {
+  const sized = ps.filter((p) => p.width && p.height);
+  if (sized.length === 0) return "4 / 5";
+  const w = sized[0].width!;
+  const h = sized[0].height!;
+  const r = w / h;
+  const uniform = sized.every((p) => Math.abs(p.width! / p.height! - r) / r < 0.02);
+  return uniform ? `${w} / ${h}` : "4 / 5";
+}
+
+/**
+ * Column plan that grows with the poster count — 1 to 5 per row — with
+ * responsive caps so laptop shows the full density while mobile stays
+ * readable (1–2 across).
+ */
+function gridClass(count: number): string {
+  if (count <= 1) return "grid-cols-1";
+  if (count === 2) return "grid-cols-2";
+  if (count === 3) return "grid-cols-2 sm:grid-cols-3";
+  if (count === 4) return "grid-cols-2 sm:grid-cols-4";
+  return "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5";
 }
 
 /* ─── Placeholder ───────────────────────────────────────────────────────── */
@@ -394,48 +416,50 @@ export function PosterList() {
             </div>
           )}
 
-          {/* Phone-gallery style: pure image tiles, true shapes, tight gaps.
-              Title/description/link live in the lightbox. */}
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 sm:gap-5 [column-fill:_balance]">
+          {/* Adaptive uniform grid — columns grow with the poster count
+              (1–5 per row), responsive on every screen size. All tiles share
+              one group aspect so every row lines up perfectly. */}
+          <div className={`grid gap-3 sm:gap-4 ${gridClass(ps.length)}${ps.length === 1 ? " justify-items-center" : ""}`}>
             {ps.map((poster) => {
               const flatIdx = flat.indexOf(poster);
               return (
-                <div key={poster.id} className="break-inside-avoid mb-4 sm:mb-5">
-                  <button
-                    onClick={() => setLightbox(flatIdx)}
-                    className="group relative block w-full rounded-xl overflow-hidden bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#A0111C]/50 focus:ring-offset-2"
-                    aria-label={poster.title ? `View ${poster.title}` : "View poster"}
-                  >
-                    <div className="relative w-full overflow-hidden" style={{ aspectRatio: aspectStyle(poster) }}>
-                      {poster.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={mediaUrl(poster.imageUrl)}
-                          alt={poster.title ?? "Property poster"}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500"
-                        />
-                      ) : (
-                        <PosterPlaceholder />
-                      )}
+                <button
+                  key={poster.id}
+                  onClick={() => setLightbox(flatIdx)}
+                  className={`group relative block overflow-hidden rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#A0111C]/50 focus:ring-offset-2 ${
+                    ps.length === 1 ? "w-full max-w-md" : "w-full"
+                  }`}
+                  aria-label={poster.title ? `View ${poster.title}` : "View poster"}
+                >
+                  <div className="relative w-full overflow-hidden" style={{ aspectRatio: groupAspect(ps) }}>
+                    {poster.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={mediaUrl(poster.imageUrl)}
+                        alt={poster.title ?? "Property poster"}
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500"
+                      />
+                    ) : (
+                      <PosterPlaceholder />
+                    )}
 
-                      {/* Hover veil */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    {/* Hover veil */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                      {/* Zoom cue */}
-                      <span className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/90 text-[#A0111C] flex items-center justify-center opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all duration-300">
-                        <Maximize2 className="h-3.5 w-3.5" />
+                    {/* Zoom cue */}
+                    <span className="absolute top-3 right-3 h-8 w-8 rounded-full bg-white/90 text-[#A0111C] flex items-center justify-center opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all duration-300">
+                      <Maximize2 className="h-3.5 w-3.5" />
+                    </span>
+
+                    {/* Dimension chip — bottom-left, appears on hover only */}
+                    {dimensionLabel(poster) && (
+                      <span className="absolute bottom-3 left-3 rounded-full bg-black/55 text-white text-[10px] font-semibold px-2.5 py-1 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        {dimensionLabel(poster)}
                       </span>
-
-                      {/* Dimension chip — bottom-left, appears on hover only */}
-                      {dimensionLabel(poster) && (
-                        <span className="absolute bottom-3 left-3 rounded-full bg-black/55 text-white text-[10px] font-semibold px-2.5 py-1 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          {dimensionLabel(poster)}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                </div>
+                    )}
+                  </div>
+                </button>
               );
             })}
           </div>

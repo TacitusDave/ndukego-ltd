@@ -1,26 +1,14 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { MapPin, ArrowRight } from "lucide-react";
 import { publicFetch } from "@/lib/api";
 import { AnimateIn } from "@/components/animate-in";
+import { EstateCard, type EstateCardData } from "@/components/estate-card";
 
 export const metadata: Metadata = {
   title: "Our Estates",
   description: "Planned communities and residential developments by Ndukego Investment & Properties Ltd.",
 };
 
-interface Estate {
-  id: string;
-  name: string;
-  code: string;
-  state: string;
-  city: string | null;
-  status: string;
-  totalPlots: number | null;
-  availablePlots: number | null;
-  shortDescription: string | null;
-  _count: { properties: number };
-}
+type Estate = EstateCardData;
 
 interface EstatesResponse {
   items: Estate[];
@@ -65,44 +53,9 @@ export default async function EstatesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {estates.map((e, i) => (
                 <AnimateIn key={e.id} delay={i * 0.06}>
-                  <div className="group rounded-2xl border border-gray-100 bg-white/80 p-6 space-y-4 hover:shadow-md hover:border-[#A0111C]/15 transition-all duration-300 flex flex-col">
-                    <div className="flex items-start justify-between gap-2">
-                      <h2
-                        className="font-bold text-lg text-gray-900 leading-tight group-hover:text-[#A0111C] transition-colors"
-                        style={{ fontFamily: "var(--font-display)" }}
-                      >
-                        {e.name}
-                      </h2>
-                      <span className="rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold px-2.5 py-0.5 shrink-0">
-                        Active
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 text-sm text-gray-400">
-                      <MapPin className="h-3.5 w-3.5 shrink-0 text-[#A0111C]" />
-                      {e.city ? `${e.city}, ` : ""}{e.state}
-                    </div>
-
-                    {e.shortDescription && (
-                      <p className="text-sm text-gray-500 leading-relaxed line-clamp-2 flex-1">
-                        {e.shortDescription}
-                      </p>
-                    )}
-
-                    <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-100 pt-4 mt-auto">
-                      <span>{e._count.properties} propert{e._count.properties === 1 ? "y" : "ies"} listed</span>
-                      {e.totalPlots && (
-                        <span>{e.availablePlots ?? "—"} / {e.totalPlots} plots available</span>
-                      )}
-                    </div>
-
-                    <Link
-                      href={`/estates/${e.id}`}
-                      className="flex items-center justify-center gap-2 rounded-xl bg-[#A0111C]/8 border border-[#A0111C]/15 text-[#A0111C] text-sm font-semibold py-2.5 hover:bg-[#A0111C] hover:text-white transition-all duration-200"
-                    >
-                      Explore estate <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </div>
+                  {/* Shared card — shows the cover photo, or the uploaded site
+                      plan when no cover photo exists. */}
+                  <EstateCard estate={e} />
                 </AnimateIn>
               ))}
             </div>
